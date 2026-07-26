@@ -1,0 +1,29 @@
+{
+  "id": "quote-001",
+  "customerName": "Alice Johnson",
+  "status": "sent",
+  "currency": "USD",
+  "lineItems": [
+    {
+      "id": "li-1",
+      "name": "Enterprise Plan (Annual)",
+      "quantity": 1,
+      "unitPrice": 4999
+    },
+    {
+      "id": "li-2",
+      "name": "Onboarding Package",
+      "quantity": 1,
+      "unitPrice": 1500
+    },
+    {
+      "id": "li-3",
+      "name": "Additional Seats (x5)",
+      "quantity": 5,
+      "unitPrice": 120
+    }
+  ],
+  "total": 7099,
+  "validUntil": "2026-08-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}
