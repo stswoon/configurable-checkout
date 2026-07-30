@@ -1,0 +1,34 @@
+{
+  "id": "quote-003",
+  "status": "SUBMITTED",
+  "order": [
+    {
+      "id": "prod-6",
+      "name": "Enterprise Cloud Suite",
+      "count": 10,
+      "priceInfo": {
+        "nrcPrice": "120.00",
+        "discountPrice": 15,
+        "totalPrice": 1050
+      }
+    },
+    {
+      "id": "prod-7",
+      "name": "Premium Support (Annual)",
+      "count": 1,
+      "priceInfo": {
+        "nrcPrice": "2400.00",
+        "discountPrice": 400,
+        "totalPrice": 2000
+      }
+    }
+  ],
+  "userInfo": {
+    "documentType": "company_registration",
+    "documentId": "HRB-123456"
+  },
+  "delivery": {
+    "address": "10 Tech Park, Munich",
+    "date": "01.09.2026"
+  }
+}

@@ -1,17 +1,19 @@
 import { create } from "zustand";
 
-const STORAGE_KEY = "configurable-checkout-config";
+const CONFIG_STORAGE_KEY = "configurable-checkout-config";
+const QUOTE_ID_STORAGE_KEY = "configurable-checkout-quote-id";
 
 export type ConfigJson = Record<string, unknown>;
 
 interface ConfigStore {
   config: ConfigJson | null;
-  applyConfig: (config: ConfigJson) => void;
+  quoteId: string | null;
+  applyConfig: (config: ConfigJson, quoteId: string | null) => void;
 }
 
-function loadFromStorage(): ConfigJson | null {
+function loadConfigFromStorage(): ConfigJson | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -23,15 +25,25 @@ function loadFromStorage(): ConfigJson | null {
   }
 }
 
-function saveToStorage(config: ConfigJson): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+function loadQuoteIdFromStorage(): string | null {
+  return localStorage.getItem(QUOTE_ID_STORAGE_KEY);
+}
+
+function saveToStorage(config: ConfigJson, quoteId: string | null): void {
+  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  if (quoteId) {
+    localStorage.setItem(QUOTE_ID_STORAGE_KEY, quoteId);
+  } else {
+    localStorage.removeItem(QUOTE_ID_STORAGE_KEY);
+  }
 }
 
 export const useConfigStore = create<ConfigStore>((set) => ({
-  config: loadFromStorage(),
+  config: loadConfigFromStorage(),
+  quoteId: loadQuoteIdFromStorage(),
 
-  applyConfig: (config) => {
-    saveToStorage(config);
-    set({ config });
+  applyConfig: (config, quoteId) => {
+    saveToStorage(config, quoteId);
+    set({ config, quoteId });
   },
 }));

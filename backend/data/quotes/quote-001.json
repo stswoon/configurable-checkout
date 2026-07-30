@@ -1,29 +1,34 @@
 {
   "id": "quote-001",
-  "customerName": "Alice Johnson",
-  "status": "sent",
-  "currency": "USD",
-  "lineItems": [
+  "status": "OPEN",
+  "order": [
     {
-      "id": "li-1",
-      "name": "Enterprise Plan (Annual)",
-      "quantity": 1,
-      "unitPrice": 4999
+      "id": "prod-1",
+      "name": "Mobile Plan Pro",
+      "count": 1,
+      "priceInfo": {
+        "nrcPrice": "49.99",
+        "discountPrice": 10,
+        "totalPrice": 39.99
+      }
     },
     {
-      "id": "li-2",
-      "name": "Onboarding Package",
-      "quantity": 1,
-      "unitPrice": 1500
-    },
-    {
-      "id": "li-3",
-      "name": "Additional Seats (x5)",
-      "quantity": 5,
-      "unitPrice": 120
+      "id": "prod-2",
+      "name": "SIM Card",
+      "count": 2,
+      "priceInfo": {
+        "nrcPrice": "5.00",
+        "discountPrice": 0,
+        "totalPrice": 10
+      }
     }
   ],
-  "total": 7099,
-  "validUntil": "2026-08-01T00:00:00.000Z",
-  "updatedAt": "2026-01-01T00:00:00.000Z"
+  "userInfo": {
+    "documentType": "passport",
+    "documentId": "AB1234567"
+  },
+  "delivery": {
+    "address": "123 Main St, Berlin",
+    "date": "15.08.2026"
+  }
 }

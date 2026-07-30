@@ -1,6 +1,7 @@
 import path from "path";
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
+import type { QuoteType } from "../../../shared/QuoteType";
 import {
   jsonFilePath,
   listJsonFiles,
@@ -10,24 +11,6 @@ import {
 
 const DATA_DIR = path.join(__dirname, "../../data/quotes");
 
-export interface QuoteLineItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-export interface Quote {
-  id: string;
-  customerName: string;
-  status: "draft" | "sent" | "accepted" | "expired";
-  currency: string;
-  lineItems: QuoteLineItem[];
-  total: number;
-  validUntil: string;
-  updatedAt: string;
-}
-
 const router = Router();
 
 router.get("/", async (_req, res) => {
@@ -36,7 +19,7 @@ router.get("/", async (_req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const quote = await readJsonFile<Quote | null>(
+  const quote = await readJsonFile<QuoteType | null>(
     jsonFilePath(DATA_DIR, req.params.id),
     null,
   );
@@ -48,28 +31,20 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const body = req.body as Partial<Quote>;
-  const lineItems = body.lineItems ?? [];
-  const total = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
-    0,
-  );
-  const quote: Quote = {
+  const body = req.body as Partial<QuoteType>;
+  const quote: QuoteType = {
     id: body.id ?? uuidv4(),
-    customerName: body.customerName ?? "Unknown",
-    status: body.status ?? "draft",
-    currency: body.currency ?? "USD",
-    lineItems,
-    total,
-    validUntil: body.validUntil ?? new Date(Date.now() + 7 * 86400_000).toISOString(),
-    updatedAt: new Date().toISOString(),
+    status: body.status ?? "OPEN",
+    order: body.order ?? [],
+    userInfo: body.userInfo ?? { documentType: "passport", documentId: "" },
+    delivery: body.delivery ?? { address: "", date: "" },
   };
   await writeJsonFile(jsonFilePath(DATA_DIR, quote.id), quote);
   res.status(201).json(quote);
 });
 
 router.put("/:id", async (req, res) => {
-  const existing = await readJsonFile<Quote | null>(
+  const existing = await readJsonFile<QuoteType | null>(
     jsonFilePath(DATA_DIR, req.params.id),
     null,
   );
@@ -77,15 +52,14 @@ router.put("/:id", async (req, res) => {
     res.status(404).json({ error: "Quote not found" });
     return;
   }
-  const body = req.body as Partial<Quote>;
-  const lineItems = body.lineItems ?? existing.lineItems;
-  const quote: Quote = {
+  const body = req.body as Partial<QuoteType>;
+  const quote: QuoteType = {
     ...existing,
     ...body,
     id: req.params.id,
-    lineItems,
-    total: lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
-    updatedAt: new Date().toISOString(),
+    order: body.order ?? existing.order,
+    userInfo: body.userInfo ?? existing.userInfo,
+    delivery: body.delivery ?? existing.delivery,
   };
   await writeJsonFile(jsonFilePath(DATA_DIR, quote.id), quote);
   res.json(quote);

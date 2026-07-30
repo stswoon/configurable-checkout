@@ -1,0 +1,44 @@
+{
+  "id": "quote-002",
+  "status": "IN_PROGRESS",
+  "order": [
+    {
+      "id": "prod-3",
+      "name": "Fiber Internet 500 Mbps",
+      "count": 1,
+      "priceInfo": {
+        "nrcPrice": "29.99",
+        "discountPrice": 5,
+        "totalPrice": 24.99
+      }
+    },
+    {
+      "id": "prod-4",
+      "name": "Wi-Fi Router Rental",
+      "count": 1,
+      "priceInfo": {
+        "nrcPrice": "4.99",
+        "discountPrice": 0,
+        "totalPrice": 4.99
+      }
+    },
+    {
+      "id": "prod-5",
+      "name": "Installation Service",
+      "count": 1,
+      "priceInfo": {
+        "nrcPrice": "79.00",
+        "discountPrice": 20,
+        "totalPrice": 59
+      }
+    }
+  ],
+  "userInfo": {
+    "documentType": "national_id",
+    "documentId": "DE987654321"
+  },
+  "delivery": {
+    "address": "45 Ringstraße, Vienna",
+    "date": "22.08.2026"
+  }
+}

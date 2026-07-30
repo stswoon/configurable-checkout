@@ -1,3 +1,5 @@
+import type { QuoteType } from "@shared/QuoteType";
+
 export interface WidgetDefinition {
   id: string;
   type: string;
@@ -18,23 +20,7 @@ export interface IdpUser {
   roles: string[];
 }
 
-export interface QuoteLineItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-export interface Quote {
-  id: string;
-  customerName: string;
-  status: "draft" | "sent" | "accepted" | "expired";
-  currency: string;
-  lineItems: QuoteLineItem[];
-  total: number;
-  validUntil: string;
-  updatedAt: string;
-}
+export type { QuoteType as Quote } from "@shared/QuoteType";
 
 export const DEFAULT_CONFIG_ID = "default";
 
@@ -60,12 +46,23 @@ export async function fetchUser(id: string): Promise<IdpUser> {
   return res.json();
 }
 
-export async function fetchQuote(id: string): Promise<Quote> {
+export async function fetchQuote(id: string): Promise<QuoteType> {
   const res = await fetch(`/api/quotes/${id}`);
   if (!res.ok) throw new Error("Failed to load quote");
   return res.json();
 }
 
-export function formatCurrency(amount: number, currency: string): string {
+export async function fetchQuoteIds(): Promise<string[]> {
+  const res = await fetch("/api/quotes");
+  if (!res.ok) throw new Error("Failed to load quote list");
+  const data = (await res.json()) as { ids: string[] };
+  return data.ids;
+}
+
+export function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+}
+
+export function quoteOrderTotal(quote: QuoteType): number {
+  return quote.order.reduce((sum, item) => sum + item.priceInfo.totalPrice, 0);
 }

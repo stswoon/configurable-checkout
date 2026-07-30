@@ -3,6 +3,7 @@ import {
   DEFAULT_CONFIG_ID,
   fetchConfig,
   fetchQuote,
+  fetchQuoteIds,
   fetchUser,
   type CheckoutConfig,
   type Quote,
@@ -11,6 +12,10 @@ import {
 
 export function useConfig(configId = DEFAULT_CONFIG_ID) {
   return useSWR<CheckoutConfig>(["config", configId], () => fetchConfig(configId));
+}
+
+export function useQuoteIds() {
+  return useSWR<string[]>("quote-ids", fetchQuoteIds);
 }
 
 export function useQuote(quoteId: string | undefined) {

@@ -16,6 +16,7 @@ export default defineConfig({
     extensions: [".tsx", ".ts", ".jsx", ".js"],
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "@shared": path.resolve(__dirname, "../shared"),
     },
   },
   module: {

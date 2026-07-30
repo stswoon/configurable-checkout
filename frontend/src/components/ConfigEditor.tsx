@@ -3,12 +3,14 @@ import { Check, FileJson } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { Textarea } from "@/ui/textarea";
-import {Card, CardContent} from "@/ui/card";
+import { Card, CardContent } from "@/ui/card";
+import { cn } from "@/lib/utils";
 import {
   useConfigStore,
   type ConfigJson,
 } from "@/stores/configStore";
-import {EXAMPLE_CONFIG} from "@/stores/exampleConfig";
+import { EXAMPLE_CONFIG } from "@/stores/exampleConfig";
+import { useQuoteIds } from "@/hooks/useApi";
 
 function toEditorJson(config: ConfigJson | null): string {
   return JSON.stringify(config ?? {}, null, 2);
@@ -16,14 +18,28 @@ function toEditorJson(config: ConfigJson | null): string {
 
 export function ConfigEditor() {
   const config = useConfigStore((state) => state.config);
+  const storedQuoteId = useConfigStore((state) => state.quoteId);
   const applyConfig = useConfigStore((state) => state.applyConfig);
 
+  const { data: quoteIds, isLoading: quoteIdsLoading } = useQuoteIds();
+
   const [jsonText, setJsonText] = useState(() => toEditorJson(config));
+  const [quoteId, setQuoteId] = useState<string>(() => storedQuoteId ?? "");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setJsonText(toEditorJson(config));
   }, [config]);
+
+  useEffect(() => {
+    setQuoteId(storedQuoteId ?? "");
+  }, [storedQuoteId]);
+
+  useEffect(() => {
+    if (!quoteId && quoteIds?.length) {
+      setQuoteId(quoteIds[0]);
+    }
+  }, [quoteId, quoteIds]);
 
   const handleApply = useCallback(() => {
     setError(null);
@@ -32,11 +48,11 @@ export function ConfigEditor() {
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("Configuration must be a JSON object");
       }
-      applyConfig(parsed as ConfigJson);
+      applyConfig(parsed as ConfigJson, quoteId || null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invalid JSON");
     }
-  }, [applyConfig, jsonText]);
+  }, [applyConfig, jsonText, quoteId]);
 
   const handleExample = useCallback(() => {
     setError(null);
@@ -46,6 +62,31 @@ export function ConfigEditor() {
   return (
     <Card className="flex h-full flex-col border-0 shadow-none">
       <CardContent className="flex flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="quote-id">Quote ID</Label>
+          <select
+            id="quote-id"
+            value={quoteId}
+            onChange={(e) => setQuoteId(e.target.value)}
+            disabled={quoteIdsLoading || !quoteIds?.length}
+            className={cn(
+              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          >
+            {quoteIdsLoading && <option value="">Loading quotes…</option>}
+            {!quoteIdsLoading && !quoteIds?.length && (
+              <option value="">No quotes available</option>
+            )}
+            {quoteIds?.map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex flex-1 flex-col gap-2">
           <Label htmlFor="config-json">JSON</Label>
           <Textarea
