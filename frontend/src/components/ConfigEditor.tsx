@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, FileJson } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
+import { AsyncSelect } from "@/ui-extra/async-select";
 import { Textarea } from "@/ui/textarea";
 import { Card, CardContent } from "@/ui/card";
-import { cn } from "@/lib/utils";
 import {
   useConfigStore,
   type ConfigJson,
@@ -64,27 +64,16 @@ export function ConfigEditor() {
       <CardContent className="flex flex-1 flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="quote-id">Quote ID</Label>
-          <select
+          <AsyncSelect
             id="quote-id"
             value={quoteId}
-            onChange={(e) => setQuoteId(e.target.value)}
-            disabled={quoteIdsLoading || !quoteIds?.length}
-            className={cn(
-              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            )}
-          >
-            {quoteIdsLoading && <option value="">Loading quotes…</option>}
-            {!quoteIdsLoading && !quoteIds?.length && (
-              <option value="">No quotes available</option>
-            )}
-            {quoteIds?.map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
+            onValueChange={setQuoteId}
+            options={quoteIds}
+            isLoading={quoteIdsLoading}
+            placeholder="Select quote"
+            loadingMessage="Loading quotes…"
+            emptyMessage="No quotes available"
+          />
         </div>
 
         <div className="flex flex-1 flex-col gap-2">

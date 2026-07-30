@@ -1,0 +1,74 @@
+---
+description: Prefer shadcn/ui components; extract reusable layers to ui-extra
+globs: frontend/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# shadcn/ui first
+
+Before writing custom UI, use shadcn components.
+
+## Workflow
+
+1. Check `frontend/src/ui/` for an existing component (`Button`, `Select`, `Input`, etc.).
+2. If missing, search the shadcn registry and add it:
+   ```bash
+   cd frontend && npx shadcn@latest add <component>
+   ```
+3. Import from `@/ui/*` — not `@/components/ui/*`.
+4. Compose with shadcn patterns instead of reinventing behavior:
+   - loading → `disabled` + placeholder / `Spinner` (no custom `isLoading` props on primitives)
+   - forms → `Field`, `FieldGroup`, `Label`
+   - empty states → `Empty`; callouts → `Alert`
+
+## ui-extra: reusable shadcn layers
+
+Extract to `frontend/src/ui-extra/` when you compose shadcn primitives into a **reusable UI block** with extra behavior that may repeat across screens:
+
+- async / loading state
+- empty state
+- option mapping, validation display, repeated trigger + content wiring
+
+Keep `@/ui/*` for unmodified shadcn CLI output. Put project-specific compositions in `@/ui-extra/*`.
+
+```tsx
+// ❌ Inline in a feature component when the pattern is generic
+<Select disabled={isLoading || !items?.length}>
+  <SelectTrigger>...</SelectTrigger>
+  <SelectContent>...</SelectContent>
+</Select>
+
+// ✅ Reusable layer in ui-extra
+import { AsyncSelect } from "@/ui-extra/async-select";
+
+<AsyncSelect
+  options={quoteIds}
+  isLoading={quoteIdsLoading}
+  loadingMessage="Loading quotes…"
+  emptyMessage="No quotes available"
+/>
+```
+
+Do **not** move one-off layout or domain-specific UI to `ui-extra` — only generic controls/overlays that wrap shadcn.
+
+## Avoid
+
+```tsx
+// ❌ Raw control styled to look like shadcn
+<select className="rounded-md border border-input ..." />
+
+// ❌ Custom div/button when shadcn exists
+<div className="rounded-md border px-3 py-2" onClick={...} />
+```
+
+## Prefer
+
+```tsx
+// ✅ shadcn primitive
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
+
+// ✅ reusable shadcn layer
+import { AsyncSelect } from "@/ui-extra/async-select";
+```
+
+Custom UI is fine only when shadcn has no suitable component or composition would be clearly impractical.
