@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { Separator } from "@/ui/separator";
 import { formatCurrency, type IdpUser, type Quote, type WidgetDefinition } from "@/lib/api";
 import { CreditCard, User, FileText, Mail, LayoutTemplate } from "lucide-react";
 
