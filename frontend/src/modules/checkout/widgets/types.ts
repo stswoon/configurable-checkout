@@ -7,9 +7,9 @@ export interface WidgetProps {
 }
 
 export function resolveWidgetType(widget: WidgetDefinition): string {
-  return widget.widgetType ?? widget.type ?? "";
+  return widget.widgetType ?? ""
 }
 
 export function getWidgetParams(widget: WidgetDefinition): Record<string, unknown> {
-  return widget.widgetParams ?? widget.props ?? {};
+  return widget.widgetParams ?? {};
 }
