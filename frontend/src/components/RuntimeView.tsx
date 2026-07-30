@@ -1,7 +1,19 @@
 import {ScrollArea} from "@/ui/scroll-area";
-import {RuntimeViewHeader} from "@/modules/checkout/WidgetRenderer";
 import { useConfigStore } from "@/stores/configStore";
 import {CheckoutRenderer} from "@/modules/checkout/CheckoutRenderer";
+import {LayoutTemplate} from "lucide-react";
+
+export function RuntimeViewHeader() {
+    return (
+        <div className="flex items-center gap-2 border-b px-6 py-4">
+            <LayoutTemplate />
+            <div>
+                <h2 className="font-semibold">Runtime View</h2>
+                <p className="text-sm text-muted-foreground">Live widget preview from config</p>
+            </div>
+        </div>
+    );
+}
 
 export function RuntimeView() {
   const config = useConfigStore((state) => state.config);

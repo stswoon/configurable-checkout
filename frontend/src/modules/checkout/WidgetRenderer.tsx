@@ -3,7 +3,7 @@ import { Badge } from "@/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Separator } from "@/ui/separator";
 import { formatCurrency, quoteOrderTotal, type IdpUser, type Quote, type WidgetDefinition } from "@/lib/api";
-import { CreditCard, User, FileText, Mail, LayoutTemplate } from "lucide-react";
+import { CreditCard, User, FileText, Mail } from "lucide-react";
 
 interface WidgetProps {
   widget: WidgetDefinition;
@@ -177,14 +177,4 @@ export function WidgetRenderer({ widget, quote, user }: WidgetProps) {
   return <Component widget={widget} quote={quote} user={user} />;
 }
 
-export function RuntimeViewHeader() {
-  return (
-    <div className="flex items-center gap-2 border-b px-6 py-4">
-      <LayoutTemplate />
-      <div>
-        <h2 className="font-semibold">Runtime View</h2>
-        <p className="text-sm text-muted-foreground">Live widget preview from config</p>
-      </div>
-    </div>
-  );
-}
+

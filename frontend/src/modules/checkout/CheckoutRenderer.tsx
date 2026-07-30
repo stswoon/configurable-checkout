@@ -7,10 +7,7 @@ interface CheckoutRendererProps {
     quoteId: string;
 }
 
-function getWidgets(config: Record<string, unknown> | null): WidgetDefinition[] {
-    if (!config || !Array.isArray(config.widgets)) {
-        return [];
-    }
+function getWidgets(config: Record<string, unknown>): WidgetDefinition[] {
     return config.widgets as WidgetDefinition[];
 }
 
