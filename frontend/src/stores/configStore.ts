@@ -27,8 +27,6 @@ function saveToStorage(config: ConfigJson): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 }
 
-export const EXAMPLE_CONFIG: ConfigJson = {};
-
 export const useConfigStore = create<ConfigStore>((set) => ({
   config: loadFromStorage(),
 
