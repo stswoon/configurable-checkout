@@ -28,7 +28,7 @@ configurable-checkout/
 ├── frontend/         React 19 + Rspack + Tailwind + shadcn/ui
 │   └── src/
 │       ├── components/   App shell (ConfigEditor, RuntimeView)
-│       ├── modules/checkout/   CheckoutRenderer, WidgetRenderer (canonical)
+│       ├── modules/checkout/   CheckoutRenderer, WidgetRenderer, widgets/ (canonical)
 │       ├── stores/       Zustand configStore, exampleConfig
 │       ├── hooks/        SWR wrappers (useApi.ts)
 │       ├── lib/          API client, utils
@@ -72,43 +72,171 @@ There is no test suite yet. Verify changes manually via the dev UI or API calls.
 
 ## Architecture
 
-### Config-driven widgets
+Reference diagram: [`docs/img.png`](docs/img.png) (also in
+the [blog post](https://blog.stswoon.ru/pages/2026/ConfigurableCheckout/index.html)).
 
-Checkout layout is defined by a JSON object with a `widgets` array:
+### Checkout module — target design
+
+Production checkout is a **wizard** driven by JSON config and a quote loaded from the backend. A single`CheckoutContext`
+owns shared state and step navigation; widgets are steps that read/write that context and optionally call the API for
+step-specific data.
+
+```
+ReactRoute (?quoteId)
+    └── CheckoutContext          ← loads JsonConfig + quote by id (QuoteManager / BE)
+            └── Form
+                    ├── WizardStepper
+                    │       ├── Widget 1   (CheckoutStep)
+                    │       ├── Widget 2   (CheckoutStep) ──optional──► BE
+                    │       └── Widget 3   (CheckoutStep)
+                    └── SubmitWidget       ──submit quote──► BE (next status)
+```
+
+**Data inputs**
+
+| Source                        | Role                                                                   |
+|-------------------------------|------------------------------------------------------------------------|
+| `quoteId` (route query param) | Identifies which quote to load                                         |
+| JsonConfig                    | Declares `stepperView`, ordered `widgets[]`, and per-widget params     |
+| QuoteManager (BE)             | `GET /api/quotes/:id` — canonical quote entity (`shared/QuoteType.ts`) |
+
+**CheckoutContext responsibilities**
+
+- Hold checkout **state** (form fields, step validity, accumulated answers) — expose `get` / `set` (or equivalent hook).
+- Own **navigation** — `nextStep`, `prevStep`, current step index; widgets must not implement their own stepper logic.
+- Provide **quote** (and session user when wired) to all descendants.
+
+**UI shell**
+
+- `Form` — wraps the wizard; eventual home for native submit / validation boundaries.
+- `WizardStepper` — renders one active step (or vertical list in `stepperView: "vertical"`) from config `widgets`.
+- `SubmitWidget` — not a config step; fixed final control that submits the quote and moves it to the next status on the
+  backend.
+
+**CheckoutStep contract (widgets)**
+
+Every step widget should behave as a `CheckoutStep`:
+
+1. **Config** — declare `stepName`, `widgetType`, optional `widgetParams` in JSON; read params via
+   `getWidgetParams(widget)`.
+2. **Shared state** — read and update checkout state only through `CheckoutContext`, not local duplication of quote-wide
+   fields.
+3. **Navigation** — call context `nextStep` / `prevStep`; disable or block next when the step is invalid.
+4. **Backend** — prefer context-provided quote/user; call SWR hooks / `lib/api.ts` only for **step-specific** extra
+   data (diagram: Widget 2 → BE). Do not re-fetch the whole quote in every widget.
+5. **Presentation** — pure UI in `widgets/<Name>Widget.tsx`; use `@/ui/*` and `@/ui-extra/*`.
+
+Registered step widgets (canonical registry in `widgets/index.ts`):
+
+| widgetType           | widgetParams (examples)                  | Notes                  |
+|----------------------|------------------------------------------|------------------------|
+| `KycWidget`          | `identificationType: "phone" \| "email"` | Identity step          |
+| `OrderDetailsWidget` | —                                        | Reads `quote.order`    |
+| `DeliveryWidget`     | —                                        | Reads `quote.delivery` |
+| `ConsentsWidget`     | `consents: { id, label }[]`              | Optional consent list  |
+
+Unknown `widgetType` values render `UnknownWidget`.
+
+### Config schema (checkout widgets)
+
+Canonical widget entries use **`stepName`**, **`widgetType`**, **`widgetParams`** (see
+`frontend/src/stores/exampleConfig.ts`):
 
 ```json
 {
-  "id": "default",
-  "quoteId": "quote-001",
+  "stepperView": "vertical",
   "widgets": [
-    { "id": "header-1", "type": "header", "props": { "title": "..." } },
-    { "id": "quote-1", "type": "quoteSummary", "props": {} }
+    {
+      "stepName": "Know Your Customer",
+      "widgetType": "KycWidget",
+      "widgetParams": {
+        "identificationType": "phone"
+      }
+    },
+    {
+      "stepName": "Order Details",
+      "widgetType": "OrderDetailsWidget"
+    },
+    {
+      "stepName": "Delivery",
+      "widgetType": "DeliveryWidget"
+    },
+    {
+      "stepName": "Consents",
+      "widgetType": "ConsentsWidget"
+    }
   ]
 }
 ```
 
-Each widget has `id`, `type`, and optional `props`. Types are resolved in `frontend/src/modules/checkout/WidgetRenderer.tsx` via `WIDGET_REGISTRY`.
+Legacy backend sample `backend/data/config/default.json` still uses `id` / `type` / `props` — deprecated for the
+checkout module; `WidgetDefinition` in `lib/api.ts` supports both shapes for migration.
 
-Registered widget types:
+### Current implementation vs target
 
-| type           | props (examples)                    |
-|----------------|-------------------------------------|
-| `header`       | `title`, `subtitle`                 |
-| `userProfile`  | `userId` (not yet wired in renderer)|
-| `quoteSummary` | —                                   |
-| `contactForm`  | `fields: string[]`                  |
-| `payment`      | `methods: string[]`                 |
+| Piece                                      | Status      | Location                                    |
+|--------------------------------------------|-------------|---------------------------------------------|
+| Widget components + registry               | Implemented | `frontend/src/modules/checkout/widgets/`    |
+| `WidgetRenderer` (type → component)        | Implemented | `WidgetRenderer.tsx`                        |
+| Flat runtime preview (all widgets visible) | Implemented | `CheckoutRenderer.tsx` + demo `RuntimeView` |
+| `CheckoutContext` (state + navigation)     | Planned     | —                                           |
+| `WizardStepper` + step visibility          | Planned     | —                                           |
+| `SubmitWidget` + quote status transition   | Planned     | —                                           |
+| Route entry with `?quoteId=`               | Planned     | demo uses Zustand `quoteId` instead         |
 
-Unknown types render `UnknownWidget` (dashed placeholder).
+The **demo app** (`ConfigEditor` / `RuntimeView`) intentionally uses a simplified flat renderer so config edits preview
+instantly. When implementing production checkout, evolve `CheckoutRenderer` toward the diagram — do not fork a second
+widget system.
 
-### State flow
+**Demo state flow (today)**
 
 1. User edits JSON in `ConfigEditor` and clicks **Apply**.
 2. `useConfigStore.applyConfig()` saves config + quoteId to `localStorage`.
-3. `RuntimeView` reads store and passes config + quoteId to `CheckoutRenderer`.
-4. `CheckoutRenderer` fetches quote data via SWR (`useQuote`) and maps widgets to `WidgetRenderer`.
+3. `RuntimeView` passes config + quoteId to `CheckoutRenderer`.
+4. `CheckoutRenderer` fetches quote via `useQuote(quoteId)` and maps every widget through `WidgetRenderer`.
 
 Config in the editor is **local-first** (localStorage). Backend config API exists but the editor does not auto-sync to it on Apply.
+
+### Developing widgets (`frontend/src/modules/checkout`)
+
+Follow this path for every new checkout step:
+
+1. **Add a file** — `widgets/MyStepWidget.tsx`. Export a named component matching the `WidgetProps` interface (
+   `widgets/types.ts`).
+2. **Register** — import in `widgets/index.ts` and add to `WIDGET_REGISTRY` under the exact `widgetType` string used in
+   JSON.
+3. **Read config** — `widget.stepName` for title fallback; `getWidgetParams(widget)` for typed params (cast locally,
+   same as existing widgets).
+4. **Use shared data** — accept `quote` / `user` from props (today) or from `CheckoutContext` (target). Show a loading
+   placeholder when `quote` is undefined.
+5. **Mutations** — write into checkout context state, not directly into SWR cache, unless persisting immediately via a
+   dedicated API (e.g. PATCH quote).
+6. **Optional API** — add fetch + hook in `lib/api.ts` / `hooks/useApi.ts` only if the step needs data beyond
+   quote/user.
+7. **Example config** — add an entry to `frontend/src/stores/exampleConfig.ts` (and backend config when migrating off
+   legacy schema).
+8. **UI** — compose `@/ui/*`; extract reusable async/empty patterns to `@/ui-extra/*`.
+
+**Do not**
+
+- Add widgets under `components/widgets/` (legacy).
+- Embed step navigation (Next/Back buttons tied to global step index) inside the widget — that belongs in
+  `WizardStepper` / context (once implemented).
+- Introduce parallel registries or duplicate `WidgetRenderer`.
+- Use legacy `type` / `props` in new checkout configs.
+
+**Module layout**
+
+```
+frontend/src/modules/checkout/
+├── CheckoutRenderer.tsx    # Shell: context + stepper (preview → wizard)
+├── WidgetRenderer.tsx      # Maps widgetType → component
+└── widgets/
+    ├── index.ts            # WIDGET_REGISTRY
+    ├── types.ts            # WidgetProps, resolveWidgetType, getWidgetParams
+    ├── UnknownWidget.tsx
+    └── *Widget.tsx         # One file per step
+```
 
 ### Shared types
 
@@ -121,20 +249,20 @@ Keep frontend `CheckoutConfig` / `WidgetDefinition` (in `lib/api.ts` and backend
 
 ## API reference
 
-| Method | Path                  | Description              |
-|--------|-----------------------|--------------------------|
-| GET    | `/api/config`         | List config IDs          |
-| GET    | `/api/config/:id`     | Get config               |
-| PUT    | `/api/config/:id`     | Upsert config            |
-| POST   | `/api/config`         | Create config (UUID id)  |
-| GET    | `/api/quotes`         | List quote IDs           |
-| GET    | `/api/quotes/:id`     | Get quote                |
-| POST   | `/api/quotes`         | Create quote             |
-| PUT    | `/api/quotes/:id`     | Update quote             |
-| GET    | `/api/idp/users`      | List users               |
-| GET    | `/api/idp/users/:id`  | Get user                 |
-| POST   | `/api/idp/login`      | Mock login               |
-| GET    | `/api/idp/session/:token` | Get session          |
+| Method | Path                      | Description             |
+|--------|---------------------------|-------------------------|
+| GET    | `/api/config`             | List config IDs         |
+| GET    | `/api/config/:id`         | Get config              |
+| PUT    | `/api/config/:id`         | Upsert config           |
+| POST   | `/api/config`             | Create config (UUID id) |
+| GET    | `/api/quotes`             | List quote IDs          |
+| GET    | `/api/quotes/:id`         | Get quote               |
+| POST   | `/api/quotes`             | Create quote            |
+| PUT    | `/api/quotes/:id`         | Update quote            |
+| GET    | `/api/idp/users`          | List users              |
+| GET    | `/api/idp/users/:id`      | Get user                |
+| POST   | `/api/idp/login`          | Mock login              |
+| GET    | `/api/idp/session/:token` | Get session             |
 
 Data files live under `backend/data/`:
 
@@ -184,10 +312,11 @@ Use `backend/src/lib/jsonStore.ts` for all file I/O (`readJsonFile`, `writeJsonF
 
 ### Add a new widget type
 
-1. Implement component in `frontend/src/modules/checkout/WidgetRenderer.tsx`.
-2. Register it in `WIDGET_REGISTRY`.
-3. Add an example entry to `backend/data/config/default.json` and/or `frontend/src/stores/exampleConfig.ts`.
-4. Document expected `props` shape via typed casts (existing pattern) or extend `WidgetDefinition` if needed.
+1. Create `frontend/src/modules/checkout/widgets/<Name>Widget.tsx` implementing `WidgetProps`.
+2. Register in `widgets/index.ts` → `WIDGET_REGISTRY` (key = JSON `widgetType`).
+3. Add an example entry to `frontend/src/stores/exampleConfig.ts`.
+4. Document `widgetParams` via local casts in the widget (existing pattern) or extend `WidgetDefinition` if needed.
+5. When `CheckoutContext` exists, consume it for state/navigation instead of only props.
 
 ### Add a new API route
 
@@ -205,8 +334,12 @@ Use `backend/src/lib/jsonStore.ts` for all file I/O (`readJsonFile`, `writeJsonF
 ## Pitfalls / do-nots
 
 - Do not assume config is persisted to the backend when user clicks Apply — only localStorage is updated.
-- `CheckoutRenderer` passes `quote` to widgets but not `user`; `userProfile` widget expects `user` prop — wire `useUser` if implementing user-dependent behavior.
-- `exampleConfig.ts` schema differs from production widget config (stepper-oriented); use `backend/data/config/default.json` as the reference for widget-based configs.
+- `CheckoutRenderer` currently renders all widgets at once (preview mode); full wizard/context is not wired yet — follow
+  the target architecture in [`docs/img.png`](docs/img.png) when extending the shell.
+- `CheckoutRenderer` passes `quote` to widgets but not `user`; wire `useUser` via context or props when implementing
+  user-dependent steps.
+- Use `exampleConfig.ts` (`stepName` / `widgetType` / `widgetParams`) as the reference for checkout widgets — not legacy
+  `backend/data/config/default.json` (`id` / `type` / `props`).
 - Avoid duplicating UI component folders (`components/ui` vs `ui`); prefer `@/ui`.
 - Do not commit secrets or `.env` files.
 - Do not run destructive git commands unless explicitly requested.
