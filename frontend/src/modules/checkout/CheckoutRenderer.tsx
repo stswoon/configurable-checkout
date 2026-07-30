@@ -27,8 +27,12 @@ export function CheckoutRenderer({config, quoteId}: CheckoutRendererProps) {
 
     return (
         <div className="mx-auto flex max-w-lg flex-col gap-4 p-6">
-            {widgets.map((widget) => (
-                <WidgetRenderer key={widget.id} widget={widget} quote={quote} />
+            {widgets.map((widget, index) => (
+                <WidgetRenderer
+                    key={widget.id ?? widget.stepName ?? index}
+                    widget={widget}
+                    quote={quote}
+                />
             ))}
         </div>
     );

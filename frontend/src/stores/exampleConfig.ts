@@ -3,13 +3,13 @@ export const EXAMPLE_CONFIG = {
     widgets: [
         {
             stepName: "Know Your Customer",
-            widget: 'KycWidget',
+            widgetType: 'KycWidget',
             widgetParams: {
                 identificationType: "phone" // phone | email
             }
         },
-        {stepName: "Order Details", widget: 'OrderDetailsWidget'},
-        {stepName: "Delivery", widget: 'DeliveryWidget'},
-        {stepName: "Consents", widget: 'ConsentsWidget'}
+        {stepName: "Order Details", widgetType: 'OrderDetailsWidget'},
+        {stepName: "Delivery", widgetType: 'DeliveryWidget'},
+        {stepName: "Consents", widgetType: 'ConsentsWidget'}
     ]
 }

@@ -1,8 +1,14 @@
 import type { QuoteType } from "@shared/QuoteType";
 
 export interface WidgetDefinition {
-  id: string;
-  type: string;
+  stepName?: string;
+  widgetType?: string;
+  widgetParams?: Record<string, unknown>;
+  /** @deprecated legacy backend config field */
+  id?: string;
+  /** @deprecated legacy backend config field — use widgetType */
+  type?: string;
+  /** @deprecated legacy backend config field — use widgetParams */
   props?: Record<string, unknown>;
 }
 
