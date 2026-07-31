@@ -1,7 +1,8 @@
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
-import {useQuote, useUser} from "@/hooks/useApi";
+import {useQuote} from "@/hooks/useApi";
 import {type WidgetDefinition} from "@/lib/api";
 import {FormProvider, SubmitErrorHandler, SubmitHandler, useForm} from "react-hook-form";
+import {CheckoutFlowWizardStep, StepMode} from "@/modules/checkout/CheckoutFlowWizardStep";
 
 interface CheckoutRendererProps {
     config: Record<string, unknown>;
@@ -44,21 +45,23 @@ export function CheckoutFlowWizard({config, quoteId}: CheckoutRendererProps) {
     }
 
     return (
-        <div className="mx-auto flex max-w-lg flex-col gap-4 p-6">
-            <FormProvider {...formMethods}>
-                <form
-                    onSubmit={formMethods.handleSubmit(onSubmit, onError)}
-                    className='taProcessStepContainer'
-                >
-                    {widgets.map((widget) => (
+        <FormProvider {...formMethods}>
+            <form
+                onSubmit={formMethods.handleSubmit(onSubmit, onError)}
+                className="mx-auto flex max-w-lg flex-col gap-4 p-6"
+            >
+                {widgets.map((widget) => (
+                    <CheckoutFlowWizardStep
+                        key={widget.stepId}
+                        stepMode={StepMode.EDIT}
+                    >
                         <WidgetRenderer
-                            key={widget.stepId}
                             widget={widget}
                             quote={quote}
                         />
-                    ))}
-                </form>
-            </FormProvider>
-        </div>
+                    </CheckoutFlowWizardStep>
+                ))}
+            </form>
+        </FormProvider>
     );
 }
