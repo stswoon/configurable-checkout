@@ -2,7 +2,7 @@ import {useQuote} from "@/hooks/useApi";
 import {CheckoutConfig} from "@/modules/checkout/types";
 import {CheckoutStep} from "@/modules/checkout/CheckoutStep";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
-import {SubmitStep} from "@/modules/checkout/SumbitStep";
+import {SubmitStep} from "@/modules/checkout/SubmitStep";
 import {useStore} from "zustand/react";
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
 
