@@ -58,12 +58,11 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
     }, []);
 
     const validateSteps = useCallback(() => {
+        const validArray = [];
         for (const validator of validatorsRef.current.values()) {
-            if (!validator()) {
-                return false;
-            }
+            validArray.push(validator());
         }
-        return true;
+        return !validArray.includes(false);
     }, []);
 
     const value = useMemo(
