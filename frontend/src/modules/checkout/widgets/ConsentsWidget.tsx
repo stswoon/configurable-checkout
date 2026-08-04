@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Label } from "@/ui/label";
 import { ClipboardCheck } from "lucide-react";
 import type { CheckoutWidgetProps } from "./types";
-import { getWidgetParams } from "./types";
 
 const DEFAULT_CONSENTS = [
   { id: "terms", label: "I agree to the Terms of Service" },
@@ -10,20 +9,15 @@ const DEFAULT_CONSENTS = [
   { id: "marketing", label: "I agree to receive marketing communications" },
 ];
 
-export function ConsentsWidget({ widget }: CheckoutWidgetProps) {
-  const params = getWidgetParams(widget);
-  const consents =
-    (params.consents as { id: string; label: string }[] | undefined) ??
-    DEFAULT_CONSENTS;
+export function ConsentsWidget({params}: CheckoutWidgetProps<any, any>) {
+    const consents = DEFAULT_CONSENTS;
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ClipboardCheck />
-          <CardTitle className="text-base">
-            {widget.stepName ?? "Consents"}
-          </CardTitle>
+            <CardTitle className="text-base">Consents</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">

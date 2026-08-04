@@ -1,10 +1,10 @@
-import {StepMode} from "@/modules/checkout/CheckoutStep";
+import {Quote} from "@/lib/api";
 
 export interface CheckoutWidgetProps<T, P> {
   value: T;
   onSubmit: (value: T) => void;
-  widgetMode: StepMode;
   params?: P;
+  quote?: Quote;
 }
 
 

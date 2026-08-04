@@ -5,7 +5,7 @@ import {OrderDetailsWidget} from "@/modules/checkout/widgets/OrderDetailsWidget"
 import {DeliveryWidget} from "@/modules/checkout/widgets/DeliveryWidget";
 import {ConsentsWidget} from "@/modules/checkout/widgets/ConsentsWidget";
 
-export const WIDGET_REGISTRY: Record<string, ComponentType<CheckoutWidgetProps>> = {
+export const WIDGET_REGISTRY: Record<string, ComponentType<CheckoutWidgetProps<unknown, unknown>>> = {
     KycWidget,
     OrderDetailsWidget,
     DeliveryWidget,

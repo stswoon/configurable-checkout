@@ -1,12 +1,14 @@
-import {WIDGET_REGISTRY, UnknownWidget} from "./widgets";
+import {UnknownWidget} from "./widgets/UnknownWidget";
+import {WIDGET_REGISTRY} from "./registry";
 import {useCheckoutStepContext} from "@/modules/checkout/CheckoutContext";
-import {WidgetDefinition} from "@/lib/api";
+import {Quote, WidgetDefinition} from "@/lib/api";
 
 interface WidgetRendererProps {
   widgetDefinition: WidgetDefinition;
+  quote?: Quote;
 }
 
-export function WidgetRenderer({widgetDefinition}: WidgetRendererProps) {
+export function WidgetRenderer({widgetDefinition, quote}: WidgetRendererProps) {
   const {stepId, widgetType} = widgetDefinition;
   const {value, setValue} = useCheckoutStepContext(stepId);
 
@@ -24,8 +26,8 @@ export function WidgetRenderer({widgetDefinition}: WidgetRendererProps) {
       <Component
           value={value}
           onSubmit={handleSubmit}
-          widgetMode={stepMode}
           widgetParams={widgetDefinition.widgetParams}
+          quote={quote}
       />
   );
 }

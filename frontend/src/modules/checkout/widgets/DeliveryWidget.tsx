@@ -4,7 +4,7 @@ import { Label } from "@/ui/label";
 import { Truck } from "lucide-react";
 import type { CheckoutWidgetProps } from "./types";
 
-export function DeliveryWidget({ widget, quote }: CheckoutWidgetProps) {
+export function DeliveryWidget({ quote }: CheckoutWidgetProps<any,any>) {
   if (!quote) {
     return (
       <Card>
@@ -19,10 +19,8 @@ export function DeliveryWidget({ widget, quote }: CheckoutWidgetProps) {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Truck />
-          <CardTitle className="text-base">
-            {widget.stepName ?? "Delivery"}
-          </CardTitle>
+            <Truck/>
+            <CardTitle className="text-base"> Delivery </CardTitle>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">

@@ -4,7 +4,7 @@ import { formatCurrency, quoteOrderTotal } from "@/lib/api";
 import { ShoppingCart } from "lucide-react";
 import type { CheckoutWidgetProps } from "./types";
 
-export function OrderDetailsWidget({ widget, quote }: CheckoutWidgetProps) {
+export function OrderDetailsWidget({quote}: CheckoutWidgetProps<any, any>) {
   if (!quote) {
     return (
       <Card>
@@ -22,9 +22,7 @@ export function OrderDetailsWidget({ widget, quote }: CheckoutWidgetProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ShoppingCart />
-          <CardTitle className="text-base">
-            {widget.stepName ?? "Order Details"}
-          </CardTitle>
+            <CardTitle className="text-base">Order Details</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">

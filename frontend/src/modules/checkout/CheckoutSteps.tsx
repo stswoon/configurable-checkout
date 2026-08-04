@@ -22,6 +22,7 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
                 >
                     <WidgetRenderer
                         widgetDefinition={widgetDefinition}
+                        quote={quote}
                     />
                 </CheckoutStep>
             ))}
