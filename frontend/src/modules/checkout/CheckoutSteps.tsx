@@ -15,9 +15,12 @@ export interface CheckoutStepsProps {
 export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const widgetDefinitions = config.widgets;
     const {data: quote} = useQuote(quoteId);
-    const {stepParams} = useCheckoutContext()
+    const {stepParams, validateSteps} = useCheckoutContext()
 
     const handleSubmit = () => {
+        if (!validateSteps()) {
+            return;
+        }
         console.log("stepParams:", stepParams);
     }
 

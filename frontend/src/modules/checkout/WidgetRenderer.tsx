@@ -1,6 +1,8 @@
+import {useCallback, useEffect, useRef} from "react";
 import {UnknownWidget} from "./widgets/UnknownWidget";
 import {WIDGET_REGISTRY} from "./registry";
-import {useCheckoutStepContext} from "@/modules/checkout/CheckoutContext";
+import {useCheckoutContext, useCheckoutStepContext} from "@/modules/checkout/CheckoutContext";
+import type {StepValidator} from "@/modules/checkout/CheckoutContext";
 import {Quote, WidgetDefinition} from "@/lib/api";
 
 interface WidgetRendererProps {
@@ -11,12 +13,23 @@ interface WidgetRendererProps {
 export function WidgetRenderer({widgetDefinition, quote}: WidgetRendererProps) {
   const {stepId, widgetType} = widgetDefinition;
   const {value, setValue} = useCheckoutStepContext(stepId);
-
-  const Component = WIDGET_REGISTRY[widgetType];
+  const {registerStepValidator, unregisterStepValidator} = useCheckoutContext();
+  const validateRef = useRef<StepValidator>(() => true);
 
   const handleSubmit = (value: unknown) => {
     setValue(value);
-  }
+  };
+
+  const handleRegisterValidate = useCallback((validate: StepValidator) => {
+    validateRef.current = validate;
+  }, []);
+
+  useEffect(() => {
+    registerStepValidator(stepId, () => validateRef.current());
+    return () => unregisterStepValidator(stepId);
+  }, [stepId, registerStepValidator, unregisterStepValidator]);
+
+  const Component = WIDGET_REGISTRY[widgetType];
 
   if (!Component) {
     return <UnknownWidget widgetType={widgetType}/>;
@@ -26,8 +39,9 @@ export function WidgetRenderer({widgetDefinition, quote}: WidgetRendererProps) {
       <Component
           value={value}
           onSubmit={handleSubmit}
-          widgetParams={widgetDefinition.widgetParams}
+          params={widgetDefinition.widgetParams}
           quote={quote}
+          onRegisterValidate={handleRegisterValidate}
       />
   );
 }

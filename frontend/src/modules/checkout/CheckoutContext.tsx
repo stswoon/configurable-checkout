@@ -3,20 +3,23 @@ import {
     useCallback,
     useContext,
     useMemo,
+    useRef,
     useState,
     type ReactNode,
 } from "react";
 
 export type StepParamsMap = Record<string, unknown>;
+export type StepValidator = () => boolean;
 
 export interface CheckoutContextValue {
     stepParams: StepParamsMap;
     getStepParam: (stepId: string) => unknown;
     setStepParam: (stepId: string, value: unknown) => void;
-    getStepParams: () => StepParamsMap;
-    setStepParams: (
-        params: StepParamsMap | ((prev: StepParamsMap) => StepParamsMap),
-    ) => void;
+    setStepParams: (params: StepParamsMap | ((prev: StepParamsMap) => StepParamsMap)) => void;
+
+    registerStepValidator: (stepId: string, validator: StepValidator) => void;
+    unregisterStepValidator: (stepId: string) => void;
+    validateSteps: () => boolean;
 }
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);
@@ -28,6 +31,7 @@ export interface CheckoutProviderProps {
 
 export function CheckoutProvider({children, initialStepParams = {}}: CheckoutProviderProps) {
     const [stepParams, setStepParamsState] = useState<StepParamsMap>(initialStepParams);
+    const validatorsRef = useRef<Map<string, StepValidator>>(new Map());
 
     const getStepParam = useCallback(
         (stepId: string) => stepParams[stepId],
@@ -38,8 +42,6 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
         setStepParamsState((prev) => ({...prev, [stepId]: value}));
     }, []);
 
-    const getStepParams = useCallback(() => stepParams, [stepParams]);
-
     const setStepParams = useCallback(
         (params: StepParamsMap | ((prev: StepParamsMap) => StepParamsMap)) => {
             setStepParamsState(params);
@@ -47,15 +49,42 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
         [],
     );
 
+    const registerStepValidator = useCallback((stepId: string, validator: StepValidator) => {
+        validatorsRef.current.set(stepId, validator);
+    }, []);
+
+    const unregisterStepValidator = useCallback((stepId: string) => {
+        validatorsRef.current.delete(stepId);
+    }, []);
+
+    const validateSteps = useCallback(() => {
+        for (const validator of validatorsRef.current.values()) {
+            if (!validator()) {
+                return false;
+            }
+        }
+        return true;
+    }, []);
+
     const value = useMemo(
         () => ({
             stepParams,
             getStepParam,
             setStepParam,
-            getStepParams,
             setStepParams,
+            registerStepValidator,
+            unregisterStepValidator,
+            validateSteps,
         }),
-        [stepParams, getStepParam, setStepParam, getStepParams, setStepParams],
+        [
+            stepParams,
+            getStepParam,
+            setStepParam,
+            setStepParams,
+            registerStepValidator,
+            unregisterStepValidator,
+            validateSteps,
+        ],
     );
 
     return (

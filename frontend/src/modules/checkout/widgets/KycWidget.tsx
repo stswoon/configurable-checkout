@@ -1,12 +1,34 @@
+import {useCallback, useState} from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { ShieldCheck } from "lucide-react";
+import {useRegisterCheckoutValidation} from "@/modules/checkout/hooks/useRegisterCheckoutValidation";
 import type { CheckoutWidgetProps } from "./types";
 
-export function KycWidget({params}: CheckoutWidgetProps<any,any>) {
-  const identificationType = (params?.identificationType as string) ?? "phone";
+interface KycValue {
+  identification: string;
+}
+
+export function KycWidget({value, onSubmit, params, onRegisterValidate}: CheckoutWidgetProps<KycValue | undefined, { identificationType?: string }>) {
+  const identificationType = params?.identificationType ?? "phone";
   const isPhone = identificationType === "phone";
+  const storedValue = value?.identification ?? "";
+  const [identification, setIdentification] = useState(storedValue);
+  const [error, setError] = useState<string | null>(null);
+
+  const validate = useCallback(() => {
+    const trimmed = identification.trim();
+    if (!trimmed) {
+      setError(`${identificationType} is required`);
+      return false;
+    }
+    setError(null);
+    onSubmit({identification: trimmed});
+    return true;
+  }, [identification, identificationType, onSubmit]);
+
+  useRegisterCheckoutValidation(onRegisterValidate, validate);
 
   return (
     <Card>
@@ -28,8 +50,16 @@ export function KycWidget({params}: CheckoutWidgetProps<any,any>) {
             id={`kyc-${identificationType}`}
             type={isPhone ? "tel" : "email"}
             placeholder={isPhone ? "+1 555 000 0000" : "you@example.com"}
-            readOnly
+            value={identification}
+            onChange={(event) => {
+              setIdentification(event.target.value);
+              if (error) {
+                setError(null);
+              }
+            }}
+            aria-invalid={error != null}
           />
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
       </CardContent>
     </Card>

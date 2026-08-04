@@ -1,10 +1,14 @@
+import {useCallback} from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { Truck } from "lucide-react";
+import {useRegisterCheckoutValidation} from "@/modules/checkout/hooks/useRegisterCheckoutValidation";
 import type { CheckoutWidgetProps } from "./types";
 
-export function DeliveryWidget({ quote }: CheckoutWidgetProps<any,any>) {
+export function DeliveryWidget({ quote, onRegisterValidate }: CheckoutWidgetProps<unknown, unknown>) {
+  const validate = useCallback(() => true, []);
+  useRegisterCheckoutValidation(onRegisterValidate, validate);
   if (!quote) {
     return (
       <Card>
