@@ -1,6 +1,7 @@
 import { type FC, type ReactNode } from "react";
 import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
 
 export enum StepMode {
     EDIT = "EDIT",
@@ -8,16 +9,17 @@ export enum StepMode {
 }
 
 export interface CheckoutFlowWizardStepProps {
-    stepMode: StepMode;
+    title?: string;
     children: ReactNode;
+    stepMode: StepMode;
     onNext?: () => void;
-    onBack?: () => void;
     onEdit?: () => void;
 }
 
-export const CheckoutFlowWizardStep: FC<CheckoutFlowWizardStepProps> = ({
-    stepMode,
-    children,
+export const CheckoutStep: FC<CheckoutFlowWizardStepProps> = ({
+                                                                  title,
+                                                                  children,
+                                                                  stepMode,
     onNext,
     onEdit,
 }) => {

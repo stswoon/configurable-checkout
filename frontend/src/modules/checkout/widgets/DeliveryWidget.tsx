@@ -2,9 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { Truck } from "lucide-react";
-import type { WidgetProps } from "./types";
+import type { CheckoutWidgetProps } from "./types";
 
-export function DeliveryWidget({ widget, quote }: WidgetProps) {
+export function DeliveryWidget({ widget, quote }: CheckoutWidgetProps) {
   if (!quote) {
     return (
       <Card>

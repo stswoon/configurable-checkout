@@ -2,9 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Separator } from "@/ui/separator";
 import { formatCurrency, quoteOrderTotal } from "@/lib/api";
 import { ShoppingCart } from "lucide-react";
-import type { WidgetProps } from "./types";
+import type { CheckoutWidgetProps } from "./types";
 
-export function OrderDetailsWidget({ widget, quote }: WidgetProps) {
+export function OrderDetailsWidget({ widget, quote }: CheckoutWidgetProps) {
   if (!quote) {
     return (
       <Card>

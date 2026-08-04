@@ -1,1 +1,1 @@
-export {CheckoutFlowWizard} from './CheckoutFlowWizard';
+export {Checkout} from './Checkout';

@@ -3,6 +3,7 @@ import type { QuoteType } from "@shared/QuoteType";
 export interface WidgetDefinition {
   stepId: string;
   stepTitle: string;
+  widgetType: string;
   widgetParams?: Record<string, unknown>;
 }
 

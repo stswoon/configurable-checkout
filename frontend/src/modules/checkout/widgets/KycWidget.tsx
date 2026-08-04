@@ -2,10 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { ShieldCheck } from "lucide-react";
-import type { WidgetProps } from "./types";
+import type { CheckoutWidgetProps } from "./types";
 import { getWidgetParams } from "./types";
 
-export function KycWidget({ widget }: WidgetProps) {
+export function KycWidget({ widget }: CheckoutWidgetProps) {
   const params = getWidgetParams(widget);
   const identificationType = (params.identificationType as string) ?? "phone";
   const isPhone = identificationType === "phone";
