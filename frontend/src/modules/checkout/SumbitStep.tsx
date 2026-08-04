@@ -1,16 +1,15 @@
 import {useState} from "react";
-import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
+import {useCheckoutContext, type StepParamsMap} from "@/modules/checkout/CheckoutContext";
 import {Button} from "@/ui/button";
 import {Card, CardContent} from "@/ui/card";
 import {Label} from "@/ui/label";
 
-export function SubmitStep() {
-    const [agreed, setAgreed] = useState(false);
-    const {getStepParams} = useCheckoutContext();
+interface SubmitStepProps {
+    onSubmit: () => void;
+}
 
-    const handleSubmit = () => {
-        console.log("Submit checkout", getStepParams());
-    };
+export function SubmitStep({onSubmit}: SubmitStepProps) {
+    const [agreed, setAgreed] = useState(false);
 
     return (
         <Card>
@@ -30,7 +29,7 @@ export function SubmitStep() {
                 <Button
                     type="button"
                     disabled={!agreed}
-                    onClick={handleSubmit}
+                    onClick={onSubmit}
                     className="w-full"
                 >
                     Submit

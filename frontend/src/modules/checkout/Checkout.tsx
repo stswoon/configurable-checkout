@@ -1,4 +1,4 @@
-import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
+import {CheckoutProvider, type StepParamsMap} from "@/modules/checkout/CheckoutContext";
 import {CheckoutSteps} from "@/modules/checkout/CheckoutSteps";
 import {SubmitStep} from "@/modules/checkout/SumbitStep";
 import {CheckoutConfig} from "@/modules/checkout/types";
@@ -24,7 +24,6 @@ export function Checkout({config, quoteId}: CheckoutRendererProps) {
     return (
         <CheckoutProvider>
             <CheckoutSteps config={config} quoteId={quoteId} />
-            <SubmitStep/>
         </CheckoutProvider>
     );
 }
