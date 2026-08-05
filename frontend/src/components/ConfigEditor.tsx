@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, FileJson } from "lucide-react";
+import JSON5 from "json5";
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { AsyncSelect } from "@/ui-extra/async-select";
@@ -9,27 +10,26 @@ import {
   useConfigStore,
   type ConfigJson,
 } from "@/stores/configStore";
-import { EXAMPLE_CONFIG } from "@/stores/exampleConfig";
+import { fetchExampleConfig } from "@/lib/api";
 import { useQuoteIds } from "@/hooks/useApi";
 
-function toEditorJson(config: ConfigJson | null): string {
-  return JSON.stringify(config ?? {}, null, 2);
-}
-
 export function ConfigEditor() {
-  const config = useConfigStore((state) => state.config);
+  const configSource = useConfigStore((state) => state.configSource);
   const storedQuoteId = useConfigStore((state) => state.quoteId);
   const applyConfig = useConfigStore((state) => state.applyConfig);
 
   const { data: quoteIds, isLoading: quoteIdsLoading } = useQuoteIds();
 
-  const [jsonText, setJsonText] = useState(() => toEditorJson(config));
+  const [jsonText, setJsonText] = useState(() => configSource ?? "");
   const [quoteId, setQuoteId] = useState<string>(() => storedQuoteId ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [exampleLoading, setExampleLoading] = useState(false);
 
   useEffect(() => {
-    setJsonText(toEditorJson(config));
-  }, [config]);
+    if (configSource !== null) {
+      setJsonText(configSource);
+    }
+  }, [configSource]);
 
   useEffect(() => {
     setQuoteId(storedQuoteId ?? "");
@@ -44,19 +44,27 @@ export function ConfigEditor() {
   const handleApply = useCallback(() => {
     setError(null);
     try {
-      const parsed = JSON.parse(jsonText) as unknown;
+      const parsed = JSON5.parse(jsonText) as unknown;
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("Configuration must be a JSON object");
       }
-      applyConfig(parsed as ConfigJson, quoteId || null);
+      applyConfig(parsed as ConfigJson, jsonText, quoteId || null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid JSON");
+      setError(e instanceof Error ? e.message : "Invalid JSON5");
     }
   }, [applyConfig, jsonText, quoteId]);
 
-  const handleExample = useCallback(() => {
+  const handleExample = useCallback(async () => {
     setError(null);
-    setJsonText(JSON.stringify(EXAMPLE_CONFIG, null, 2));
+    setExampleLoading(true);
+    try {
+      const example = await fetchExampleConfig();
+      setJsonText(example);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load example config");
+    } finally {
+      setExampleLoading(false);
+    }
   }, []);
 
   return (
@@ -77,7 +85,7 @@ export function ConfigEditor() {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-2">
-          <Label htmlFor="config-json">JSON</Label>
+          <Label htmlFor="config-json">JSON5</Label>
           <Textarea
             id="config-json"
             value={jsonText}
@@ -94,9 +102,9 @@ export function ConfigEditor() {
             <Check data-icon="inline-start" />
             Apply
           </Button>
-          <Button variant="outline" onClick={handleExample}>
+          <Button variant="outline" onClick={handleExample} disabled={exampleLoading}>
             <FileJson data-icon="inline-start" />
-            Example
+            {exampleLoading ? "Loading…" : "Example"}
           </Button>
         </div>
       </CardContent>

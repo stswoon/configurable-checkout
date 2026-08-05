@@ -5,6 +5,7 @@ import {
   jsonFilePath,
   listJsonFiles,
   readJsonFile,
+  readTextFile,
   writeJsonFile,
 } from "../lib/jsonStore";
 
@@ -28,6 +29,15 @@ const router = Router();
 router.get("/", async (_req, res) => {
   const ids = await listJsonFiles(DATA_DIR);
   res.json({ ids });
+});
+
+router.get("/example", async (_req, res) => {
+  const source = await readTextFile(path.join(DATA_DIR, "default.json5"), null);
+  if (!source) {
+    res.status(404).json({ error: "Example config not found" });
+    return;
+  }
+  res.type("application/json5").send(source);
 });
 
 router.get("/:id", async (req, res) => {

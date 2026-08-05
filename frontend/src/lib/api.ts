@@ -32,6 +32,12 @@ export async function fetchConfig(id: string): Promise<CheckoutConfig> {
   return res.json();
 }
 
+export async function fetchExampleConfig(): Promise<string> {
+  const res = await fetch("/api/config/example");
+  if (!res.ok) throw new Error("Failed to load example config");
+  return res.text();
+}
+
 export async function saveConfig(id: string, config: Omit<CheckoutConfig, "id" | "updatedAt">): Promise<CheckoutConfig> {
   const res = await fetch(`/api/config/${id}`, {
     method: "PUT",
