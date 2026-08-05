@@ -47,7 +47,7 @@ export function KycWidget({
         >
           <FieldGroup>
             <FieldDescription>
-              Verify your identity using {isPhone ? "phone number" : "email address"}.
+              Verify your identity using {isPhone ? "phone number (+7 123 456 78 90)" : "email address (e.g. alice@example.com)"}.
             </FieldDescription>
             <Controller
               name="identification"

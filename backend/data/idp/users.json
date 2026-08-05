@@ -2,12 +2,14 @@
   {
     "id": "user-001",
     "email": "alice@example.com",
+    "phone": "+7 123 456 78 90",
     "name": "Alice Johnson",
     "roles": ["customer"]
   },
   {
     "id": "user-002",
     "email": "bob@example.com",
+    "phone": "+7 111 000 00 00",
     "name": "Bob Smith",
     "roles": ["customer", "admin"]
   }
