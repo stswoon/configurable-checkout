@@ -34,7 +34,7 @@ export function SubmitStep() {
                             id="submit-terms"
                             className="mt-0.5"
                             checked={agreed}
-                            onCheckedChange={(checked) => setAgreed(checked === true)}
+                            onCheckedChange={(checked) => setAgreed(checked)}
                         />
                         <Label htmlFor="submit-terms" className="font-normal leading-snug">
                             I ready to submit
