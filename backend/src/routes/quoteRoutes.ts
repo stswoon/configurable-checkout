@@ -8,6 +8,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from "../lib/jsonStore";
+import { recalculateOrderPrices } from "../lib/quotePricing";
 
 const DATA_DIR = path.join(__dirname, "../../data/quotes");
 
@@ -35,7 +36,7 @@ router.post("/", async (req, res) => {
   const quote: QuoteType = {
     id: body.id ?? uuidv4(),
     status: body.status ?? "OPEN",
-    order: body.order ?? [],
+    order: recalculateOrderPrices(body.order ?? []),
     userInfo: body.userInfo ?? { documentType: "passport", documentId: "" },
     delivery: body.delivery ?? { address: "", date: "" },
   };
@@ -57,7 +58,7 @@ router.put("/:id", async (req, res) => {
     ...existing,
     ...body,
     id: req.params.id,
-    order: body.order ?? existing.order,
+    order: recalculateOrderPrices(body.order ?? existing.order),
     userInfo: body.userInfo ?? existing.userInfo,
     delivery: body.delivery ?? existing.delivery,
   };

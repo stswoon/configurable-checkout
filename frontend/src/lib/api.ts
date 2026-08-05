@@ -77,10 +77,44 @@ export async function fetchQuoteIds(): Promise<string[]> {
   return data.ids;
 }
 
+export async function updateQuote(
+  id: string,
+  patch: Partial<QuoteType>,
+): Promise<QuoteType> {
+  const res = await fetch(`/api/quotes/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Failed to update quote");
+  return res.json();
+}
+
 export function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 }
 
-export function quoteOrderTotal(quote: QuoteType): number {
+/** totalPrice = (nrcPrice - discountPrice) × count — mirrors backend quotePricing */
+export function recalculateProductPrice(
+  product: QuoteType["order"][number],
+  count: number = product.count,
+): QuoteType["order"][number] {
+  const unit =
+    Number.parseFloat(product.priceInfo.nrcPrice) -
+    product.priceInfo.discountPrice;
+  const totalPrice = Math.round(unit * count * 100) / 100;
+  return {
+    ...product,
+    count,
+    priceInfo: {
+      ...product.priceInfo,
+      totalPrice,
+    },
+  };
+}
+
+export function quoteOrderTotal(
+  quote: Pick<QuoteType, "order"> | { order: QuoteType["order"] },
+): number {
   return quote.order.reduce((sum, item) => sum + item.priceInfo.totalPrice, 0);
 }
