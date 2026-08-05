@@ -2,15 +2,15 @@ export const EXAMPLE_CONFIG = {
     stepperView: "vertical", // vertical | stepper
     widgets: [
         {
-            stepId: "n1",
+            stepId: "userInfo",
             stepTitle: "Know Your Customer",
             widgetType: 'KycWidget',
             widgetParams: {
                 identificationType: "phone" // phone | email
             }
         },
-        {stepId: "n2", stepTitle: "Order Details", widgetType: 'OrderDetailsWidget'},
-        {stepId: "n3", stepTitle: "Delivery", widgetType: 'DeliveryWidget'},
+        {stepId: "order", stepTitle: "Order Details", widgetType: 'OrderDetailsWidget'},
+        {stepId: "delivery", stepTitle: "Delivery", widgetType: 'DeliveryWidget'},
         {stepId: "n4", stepTitle: "Consents", widgetType: 'ConsentsWidget'}
     ]
 }
