@@ -1,5 +1,5 @@
 export const EXAMPLE_CONFIG = {
-    stepperView: "vertical", // vertical | stepper
+    stepperView: "landing", // landing | stepper
     widgets: [
         {
             stepId: "userInfo",

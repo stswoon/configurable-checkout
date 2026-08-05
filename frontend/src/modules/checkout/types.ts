@@ -1,5 +1,7 @@
+export type StepperView = "landing" | "stepper";
+
 export interface CheckoutConfig {
-    view: "steps" | "landing";
+    stepperView?: StepperView;
     widgets: WidgetDefinition[];
 }
 

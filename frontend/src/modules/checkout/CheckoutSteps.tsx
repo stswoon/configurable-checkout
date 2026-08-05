@@ -3,6 +3,7 @@ import {useQuote} from "@/hooks/useApi";
 import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
 import {CheckoutConfig} from "@/modules/checkout/types";
 import {CheckoutStep} from "@/modules/checkout/CheckoutStep";
+import {CheckoutStepper} from "@/modules/checkout/CheckoutStepper";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
 import {SubmitStep} from "@/modules/checkout/SubmitStep";
 import {buildInitialStepParams} from "@/modules/checkout/stepParams";
@@ -12,8 +13,17 @@ export interface CheckoutStepsProps {
     quoteId: string;
 }
 
+function resolveStepperView(config: CheckoutConfig) {
+    return config.stepperView === "stepper" ? "stepper" : "landing";
+}
+
 export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const widgetDefinitions = config.widgets;
+    const stepperView = resolveStepperView(config);
+    const stepIds = useMemo(
+        () => widgetDefinitions.map((widget) => widget.stepId),
+        [widgetDefinitions],
+    );
     const {data: quote, isLoading, error} = useQuote(quoteId);
 
     const initialStepParams = useMemo(
@@ -39,23 +49,32 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
 
     return (
         <CheckoutProvider
-            key={quoteId}
+            key={`${quoteId}-${stepperView}`}
             quoteId={quoteId}
             initialStepParams={initialStepParams}
+            stepperView={stepperView}
+            stepIds={stepIds}
         >
             <div
                 data-test-id="CheckoutSteps"
+                data-stepper-view={stepperView}
                 className="mx-auto flex max-w-lg flex-col gap-3 p-6"
             >
-                {widgetDefinitions.map((widgetDefinition) => (
-                    <CheckoutStep
-                        key={widgetDefinition.stepId}
-                        title={widgetDefinition.stepTitle}
-                    >
-                        <WidgetRenderer widgetDefinition={widgetDefinition} />
-                    </CheckoutStep>
-                ))}
-                <SubmitStep quoteId={quoteId} widgets={widgetDefinitions} />
+                {stepperView === "stepper" ? (
+                    <CheckoutStepper widgets={widgetDefinitions} quoteId={quoteId} />
+                ) : (
+                    <>
+                        {widgetDefinitions.map((widgetDefinition) => (
+                            <CheckoutStep
+                                key={widgetDefinition.stepId}
+                                title={widgetDefinition.stepTitle}
+                            >
+                                <WidgetRenderer widgetDefinition={widgetDefinition} />
+                            </CheckoutStep>
+                        ))}
+                        <SubmitStep quoteId={quoteId} widgets={widgetDefinitions} />
+                    </>
+                )}
             </div>
         </CheckoutProvider>
     );

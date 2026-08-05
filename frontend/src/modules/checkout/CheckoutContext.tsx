@@ -7,12 +7,22 @@ import {
     useState,
     type ReactNode,
 } from "react";
+import {scrollToFirstCheckoutWidgetError} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import type {StepperView} from "@/modules/checkout/types";
 
 export type StepParamsMap = Record<string, unknown>;
 export type StepValidator = () => boolean | Promise<boolean>;
 
 export interface CheckoutContextValue {
     quoteId: string;
+    stepperView: StepperView;
+    stepCount: number;
+    currentStepIndex: number;
+    isFirstStep: boolean;
+    isLastStep: boolean;
+    nextStep: () => Promise<boolean>;
+    prevStep: () => void;
+
     stepParams: StepParamsMap;
     getStepParam: (stepId: string) => unknown;
     setStepParam: (stepId: string, value: unknown) => void;
@@ -29,15 +39,24 @@ export interface CheckoutProviderProps {
     children: ReactNode;
     quoteId: string;
     initialStepParams?: StepParamsMap;
+    stepperView?: StepperView;
+    stepIds?: string[];
 }
 
 export function CheckoutProvider({
     children,
     quoteId,
     initialStepParams = {},
+    stepperView = "landing",
+    stepIds = [],
 }: CheckoutProviderProps) {
     const [stepParams, setStepParamsState] = useState<StepParamsMap>(initialStepParams);
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const validatorsRef = useRef<Map<string, StepValidator>>(new Map());
+
+    const stepCount = stepIds.length;
+    const isFirstStep = currentStepIndex === 0;
+    const isLastStep = currentStepIndex >= stepCount - 1;
 
     const getStepParam = useCallback(
         (stepId: string) => stepParams[stepId],
@@ -63,6 +82,43 @@ export function CheckoutProvider({
         validatorsRef.current.delete(stepId);
     }, []);
 
+    const validateCurrentStep = useCallback(async () => {
+        if (stepperView !== "stepper") {
+            return true;
+        }
+        const stepId = stepIds[currentStepIndex];
+        const validator = stepIds.length > 0 ? validatorsRef.current.get(stepId) : undefined;
+        if (!validator) {
+            return true;
+        }
+        return validator();
+    }, [currentStepIndex, stepIds, stepperView]);
+
+    const nextStep = useCallback(async () => {
+        if (stepperView !== "stepper" || isLastStep) {
+            return true;
+        }
+
+        if (!(await validateCurrentStep())) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    scrollToFirstCheckoutWidgetError();
+                });
+            });
+            return false;
+        }
+
+        setCurrentStepIndex((index) => Math.min(index + 1, stepCount - 1));
+        return true;
+    }, [isLastStep, stepCount, stepperView, validateCurrentStep]);
+
+    const prevStep = useCallback(() => {
+        if (stepperView !== "stepper" || isFirstStep) {
+            return;
+        }
+        setCurrentStepIndex((index) => Math.max(index - 1, 0));
+    }, [isFirstStep, stepperView]);
+
     const validateSteps = useCallback(async () => {
         // Preserve registration order (widget mount / config order) so the first
         // failing step matches the topmost error in the DOM.
@@ -76,6 +132,13 @@ export function CheckoutProvider({
     const value = useMemo(
         () => ({
             quoteId,
+            stepperView,
+            stepCount,
+            currentStepIndex,
+            isFirstStep,
+            isLastStep,
+            nextStep,
+            prevStep,
             stepParams,
             getStepParam,
             setStepParam,
@@ -86,6 +149,13 @@ export function CheckoutProvider({
         }),
         [
             quoteId,
+            stepperView,
+            stepCount,
+            currentStepIndex,
+            isFirstStep,
+            isLastStep,
+            nextStep,
+            prevStep,
             stepParams,
             getStepParam,
             setStepParam,
