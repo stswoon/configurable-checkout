@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
+import {scrollToFirstCheckoutWidgetError} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import {Button} from "@/ui/button";
 import {Card, CardContent} from "@/ui/card";
 import {Checkbox} from "@/ui/checkbox";
@@ -20,6 +21,12 @@ export function SubmitStep() {
 
     const handleSubmit = async () => {
         if (!(await validateSteps())) {
+            // Wait for RHF error class / aria-invalid to commit before scrolling.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    scrollToFirstCheckoutWidgetError();
+                });
+            });
             return;
         }
         setOpen(true);

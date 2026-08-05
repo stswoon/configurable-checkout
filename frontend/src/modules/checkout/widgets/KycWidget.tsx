@@ -3,6 +3,7 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/ui/card";
 import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/field";
 import {Input} from "@/ui/input";
 import {ShieldCheck} from "lucide-react";
+import {cn} from "@/lib/utils";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {CheckoutWidgetProps} from "./types";
 
@@ -25,14 +26,14 @@ export function KycWidget({
     },
   });
 
-  useCheckoutWidgetForm(
+  const {errorClassName} = useCheckoutWidgetForm(
     form,
     (data) => onSubmit({identification: data.identification.trim()}),
     onRegisterValidate,
   );
 
   return (
-    <Card>
+    <Card className={cn(errorClassName)}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck />

@@ -3,6 +3,7 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/ui/card";
 import {Checkbox} from "@/ui/checkbox";
 import {Field, FieldContent, FieldError, FieldGroup, FieldLabel, FieldSet} from "@/ui/field";
 import {ClipboardCheck} from "lucide-react";
+import {cn} from "@/lib/utils";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {CheckoutWidgetProps} from "./types";
 
@@ -30,10 +31,10 @@ export function ConsentsWidget({
     defaultValues: buildDefaultValues(value),
   });
 
-  useCheckoutWidgetForm(form, onSubmit, onRegisterValidate);
+  const {errorClassName} = useCheckoutWidgetForm(form, onSubmit, onRegisterValidate);
 
   return (
-    <Card>
+    <Card className={cn(errorClassName)}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ClipboardCheck />

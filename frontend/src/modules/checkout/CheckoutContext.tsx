@@ -58,9 +58,12 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
     }, []);
 
     const validateSteps = useCallback(async () => {
-        const results = await Promise.all(
-            [...validatorsRef.current.values()].map((validator) => validator()),
-        );
+        // Preserve registration order (widget mount / config order) so the first
+        // failing step matches the topmost error in the DOM.
+        const results: boolean[] = [];
+        for (const validator of validatorsRef.current.values()) {
+            results.push(await validator());
+        }
         return !results.includes(false);
     }, []);
 

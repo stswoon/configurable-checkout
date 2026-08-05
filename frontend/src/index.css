@@ -123,3 +123,8 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+/* Widget form error state — toggled from checkout validation */
+.checkout-widget-error {
+  box-shadow: 0 0 0 1px var(--destructive);
+}
