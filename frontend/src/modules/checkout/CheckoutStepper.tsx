@@ -4,6 +4,7 @@ import {SUBMIT_STEP_ID, SUBMIT_STEP_TITLE} from "@/modules/checkout/types";
 import type {WidgetDefinition} from "@/modules/checkout/types";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
 import {Button} from "@/ui/button";
+import {cn} from "@/lib/utils";
 
 export interface CheckoutStepperProps {
     widgets: WidgetDefinition[];
@@ -23,9 +24,7 @@ export function CheckoutStepper({widgets, quoteId}: CheckoutStepperProps) {
 
     const isSubmitStep = currentStepId === SUBMIT_STEP_ID;
     const currentWidget = isSubmitStep ? null : widgets[currentStepIndex];
-    const stepTitle = isSubmitStep
-        ? SUBMIT_STEP_TITLE
-        : currentWidget?.stepTitle ?? "";
+    const stepTitle = isSubmitStep ? SUBMIT_STEP_TITLE : (currentWidget?.stepTitle ?? "");
 
     return (
         <>
@@ -36,38 +35,26 @@ export function CheckoutStepper({widgets, quoteId}: CheckoutStepperProps) {
             {isSubmitStep ? (
                 <SubmitStep quoteId={quoteId} widgets={widgets} />
             ) : currentWidget ? (
-                <WidgetRenderer key={currentWidget.stepId} widgetDefinition={currentWidget} />
+                <WidgetRenderer widgetDefinition={currentWidget} />
             ) : null}
 
-            {!isLastStep ? (
-                <div className="flex justify-between gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={isFirstStep}
-                        onClick={prevStep}
-                    >
+            {stepCount > 1 ? (
+                <div className={cn("flex gap-2", !isLastStep && "justify-between")}>
+                    <Button type="button" variant="outline" disabled={isFirstStep} onClick={prevStep}>
                         Back
                     </Button>
-                    <Button
-                        type="button"
-                        onClick={() => {
-                            void nextStep();
-                        }}
-                    >
-                        Next
-                    </Button>
+                    {!isLastStep ? (
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                void nextStep();
+                            }}
+                        >
+                            Next
+                        </Button>
+                    ) : null}
                 </div>
-            ) : (
-                <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isFirstStep}
-                    onClick={prevStep}
-                >
-                    Back
-                </Button>
-            )}
+            ) : null}
         </>
     );
 }

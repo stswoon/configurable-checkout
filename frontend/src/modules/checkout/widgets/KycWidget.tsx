@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import {CheckCircle2, ShieldCheck} from "lucide-react";
 import {lookupUser} from "@/lib/api";
@@ -11,12 +11,6 @@ import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/
 import {Input} from "@/ui/input";
 import type {CheckoutWidgetProps} from "./types";
 
-interface VerifiedUser {
-    id: string;
-    name: string;
-    identification: string;
-}
-
 export function KycWidget({
     stepId,
     value,
@@ -25,19 +19,6 @@ export function KycWidget({
 }: CheckoutWidgetProps<KycStepValue | undefined, {identificationType?: string}>) {
     const identificationType = params?.identificationType ?? "phone";
     const isPhone = identificationType === "phone";
-
-    const [verifiedUser, setVerifiedUser] = useState<VerifiedUser | null>(() => {
-        if (value?.verifiedUserId && value?.verifiedUserName && value.identification) {
-            return {
-                id: value.verifiedUserId,
-                name: value.verifiedUserName,
-                identification: value.identification,
-            };
-        }
-        return null;
-    });
-    const verifiedUserRef = useRef(verifiedUser);
-    verifiedUserRef.current = verifiedUser;
 
     const [isValidating, setIsValidating] = useState(false);
     const [lookupError, setLookupError] = useState<string | null>(null);
@@ -50,30 +31,38 @@ export function KycWidget({
         },
     });
 
-    const {errorClassName} = useCheckoutWidgetForm(
-        stepId,
-        form,
-        (data) => {
-            const current = verifiedUserRef.current;
-            onSubmit({
-                identification: data.identification.trim(),
-                verifiedUserId: current?.id,
-                verifiedUserName: current?.name,
-            });
-        },
-    );
+    const identification = form.watch("identification");
+    const verifiedUserId = form.watch("verifiedUserId");
+    const verifiedUserName = form.watch("verifiedUserName");
+    const isVerified = Boolean(verifiedUserId && verifiedUserName);
+
+    const {errorClassName} = useCheckoutWidgetForm(stepId, form, (data) => {
+        onSubmit({
+            identification: data.identification.trim(),
+            verifiedUserId: data.verifiedUserId,
+            verifiedUserName: data.verifiedUserName,
+        });
+    });
 
     const clearVerification = () => {
-        verifiedUserRef.current = null;
-        setVerifiedUser(null);
         setLookupError(null);
         form.setValue("verifiedUserId", undefined);
         form.setValue("verifiedUserName", undefined);
     };
 
+    const applyVerification = (user: {id: string; name: string}, identificationValue: string) => {
+        form.setValue("verifiedUserId", user.id);
+        form.setValue("verifiedUserName", user.name);
+        onSubmit({
+            identification: identificationValue,
+            verifiedUserId: user.id,
+            verifiedUserName: user.name,
+        });
+    };
+
     const handleValidate = async () => {
-        const identification = form.getValues("identification").trim();
-        if (!identification) {
+        const trimmed = form.getValues("identification").trim();
+        if (!trimmed) {
             await form.trigger("identification");
             return;
         }
@@ -81,39 +70,17 @@ export function KycWidget({
         setIsValidating(true);
         setLookupError(null);
         try {
-            const user = await lookupUser(
-                isPhone ? {phone: identification} : {email: identification},
-            );
-            const next: VerifiedUser = {
-                id: user.id,
-                name: user.name,
-                identification,
-            };
-            verifiedUserRef.current = next;
-            setVerifiedUser(next);
-            form.setValue("verifiedUserId", user.id);
-            form.setValue("verifiedUserName", user.name);
-            onSubmit({
-                identification,
-                verifiedUserId: user.id,
-                verifiedUserName: user.name,
-            });
+            const user = await lookupUser(isPhone ? {phone: trimmed} : {email: trimmed});
+            applyVerification(user, trimmed);
             await form.trigger("identification");
         } catch {
             clearVerification();
             setLookupError("User not found. Check the value and try again.");
-            form.setError("identification", {
-                type: "validate",
-                message: "User not found",
-            });
+            form.setError("identification", {type: "validate", message: "User not found"});
         } finally {
             setIsValidating(false);
         }
     };
-
-    const isVerifiedForCurrent =
-        verifiedUser !== null &&
-        verifiedUser.identification === form.watch("identification").trim();
 
     return (
         <CheckoutWidgetCard
@@ -121,7 +88,7 @@ export function KycWidget({
             title="Know Your Customer"
             errorClassName={errorClassName}
             badge={
-                isVerifiedForCurrent ? (
+                isVerified ? (
                     <Badge variant="secondary" className="gap-1">
                         <CheckCircle2 className="size-3.5 text-emerald-600" />
                         Verified
@@ -148,8 +115,7 @@ export function KycWidget({
                                 if (!trimmed) {
                                     return `${identificationType} is required`;
                                 }
-                                const verified = verifiedUserRef.current;
-                                if (!verified || verified.identification !== trimmed) {
+                                if (!form.getValues("verifiedUserId")) {
                                     return "Please validate the user before submitting";
                                 }
                                 return true;
@@ -187,10 +153,10 @@ export function KycWidget({
                                 {lookupError && !fieldState.invalid ? (
                                     <FieldError>{lookupError}</FieldError>
                                 ) : null}
-                                {isVerifiedForCurrent ? (
+                                {isVerified && identification.trim() ? (
                                     <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
                                         <CheckCircle2 className="size-4 text-emerald-600" />
-                                        {verifiedUser.name}
+                                        {verifiedUserName}
                                     </p>
                                 ) : null}
                             </Field>

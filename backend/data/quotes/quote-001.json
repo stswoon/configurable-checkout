@@ -1,6 +1,6 @@
 {
   "id": "quote-001",
-  "status": "OPEN",
+  "status": "IN_PROGRESS",
   "order": [
     {
       "id": "prod-1",
@@ -24,8 +24,8 @@
     }
   ],
   "userInfo": {
-    "documentType": "passport",
-    "documentId": "AB1234567"
+    "documentType": "phone",
+    "documentId": "+7 123 456 78 90"
   },
   "delivery": {
     "address": "123 Main St, Berlin",

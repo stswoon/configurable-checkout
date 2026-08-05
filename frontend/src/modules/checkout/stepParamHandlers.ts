@@ -10,6 +10,8 @@ export interface OrderDetailsStepValue {
     order: QuoteType["order"];
 }
 
+export type DeliveryStepValue = Delivery;
+
 function isKycStepValue(value: unknown): value is KycStepValue {
     return Boolean(value && typeof value === "object" && typeof (value as KycStepValue).identification === "string");
 }
@@ -18,7 +20,7 @@ function isOrderDetailsStepValue(value: unknown): value is OrderDetailsStepValue
     return Boolean(value && typeof value === "object" && Array.isArray((value as OrderDetailsStepValue).order));
 }
 
-export function isDeliveryStepValue(value: unknown): value is Delivery {
+export function isDeliveryStepValue(value: unknown): value is DeliveryStepValue {
     if (!value || typeof value !== "object") {
         return false;
     }
@@ -28,14 +30,12 @@ export function isDeliveryStepValue(value: unknown): value is Delivery {
 
 interface StepParamHandler {
     fromQuote: (quote: QuoteType) => unknown;
-    fromResponse: (quote: QuoteType) => unknown;
     toPatch: (value: unknown) => Partial<QuoteType>;
 }
 
 export const STEP_PARAM_HANDLERS: Record<string, StepParamHandler> = {
     KycWidget: {
         fromQuote: (quote) => ({identification: quote.userInfo.documentId ?? ""}),
-        fromResponse: (quote) => ({identification: quote.userInfo.documentId ?? ""}),
         toPatch: (value) => {
             if (!isKycStepValue(value) || !value.identification.trim()) {
                 return {};
@@ -50,12 +50,10 @@ export const STEP_PARAM_HANDLERS: Record<string, StepParamHandler> = {
     },
     OrderDetailsWidget: {
         fromQuote: (quote) => ({order: quote.order}),
-        fromResponse: (quote) => ({order: quote.order}),
         toPatch: (value) => (isOrderDetailsStepValue(value) ? {order: value.order} : {}),
     },
     DeliveryWidget: {
         fromQuote: (quote) => ({...quote.delivery}),
-        fromResponse: (quote) => ({...quote.delivery}),
         toPatch: (value) => {
             if (!isDeliveryStepValue(value)) {
                 return {};
@@ -70,7 +68,6 @@ export const STEP_PARAM_HANDLERS: Record<string, StepParamHandler> = {
     },
     ConsentsWidget: {
         fromQuote: () => ({}),
-        fromResponse: () => undefined,
         toPatch: () => ({}),
     },
 };

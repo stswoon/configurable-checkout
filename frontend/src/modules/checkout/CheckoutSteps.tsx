@@ -1,49 +1,64 @@
-import {useMemo} from "react";
+import {useMemo, type ReactNode} from "react";
 import {useQuote} from "@/hooks/useApi";
 import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
-import {CheckoutConfig, SUBMIT_STEP_ID} from "@/modules/checkout/types";
 import {CheckoutStepper} from "@/modules/checkout/CheckoutStepper";
-import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
-import {SubmitStep} from "@/modules/checkout/SubmitStep";
 import {buildInitialStepParams} from "@/modules/checkout/stepParams";
+import {SUBMIT_STEP_ID, type CheckoutConfig} from "@/modules/checkout/types";
+import {SubmitStep} from "@/modules/checkout/SubmitStep";
+import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
+import type {QuoteType} from "@shared/QuoteType";
 
 export interface CheckoutStepsProps {
     config: CheckoutConfig;
     quoteId: string;
 }
 
-export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
-    const widgetDefinitions = config.widgets;
+function CheckoutShell({children}: {children: ReactNode}) {
+    return (
+        <div
+            data-test-id="CheckoutSteps"
+            className="mx-auto flex max-w-lg flex-col gap-3 p-6"
+        >
+            {children}
+        </div>
+    );
+}
+
+function CheckoutMessage({children, error}: {children: ReactNode; error?: boolean}) {
+    return (
+        <CheckoutShell>
+            <p className={`text-center text-sm ${error ? "text-destructive" : "text-muted-foreground"}`}>
+                {children}
+            </p>
+        </CheckoutShell>
+    );
+}
+
+function CheckoutContent({
+    quote,
+    config,
+    quoteId,
+}: {
+    quote: QuoteType;
+    config: CheckoutConfig;
+    quoteId: string;
+}) {
+    const widgets = config.widgets;
     const stepperView = config.stepperView === "stepper" ? "stepper" : "landing";
+    const isStepper = stepperView === "stepper";
+
     const stepIds = useMemo(
         () =>
-            stepperView === "stepper"
-                ? [...widgetDefinitions.map((widget) => widget.stepId), SUBMIT_STEP_ID]
-                : widgetDefinitions.map((widget) => widget.stepId),
-        [stepperView, widgetDefinitions],
+            isStepper
+                ? [...widgets.map((widget) => widget.stepId), SUBMIT_STEP_ID]
+                : widgets.map((widget) => widget.stepId),
+        [isStepper, widgets],
     );
-    const {data: quote, isLoading, error} = useQuote(quoteId);
 
     const initialStepParams = useMemo(
-        () => (quote ? buildInitialStepParams(quote, widgetDefinitions) : {}),
-        [quote, widgetDefinitions],
+        () => buildInitialStepParams(quote, widgets),
+        [quote, widgets],
     );
-
-    if (isLoading) {
-        return (
-            <div className="mx-auto flex max-w-lg flex-col gap-3 p-6">
-                <p className="text-center text-sm text-muted-foreground">Loading quote…</p>
-            </div>
-        );
-    }
-
-    if (error || !quote) {
-        return (
-            <div className="mx-auto flex max-w-lg flex-col gap-3 p-6">
-                <p className="text-center text-sm text-destructive">Failed to load quote.</p>
-            </div>
-        );
-    }
 
     return (
         <CheckoutProvider
@@ -53,25 +68,32 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
             stepperView={stepperView}
             stepIds={stepIds}
         >
-            <div
-                data-test-id="CheckoutSteps"
-                data-stepper-view={stepperView}
-                className="mx-auto flex max-w-lg flex-col gap-3 p-6"
-            >
-                {stepperView === "stepper" ? (
-                    <CheckoutStepper widgets={widgetDefinitions} quoteId={quoteId} />
+            <CheckoutShell>
+                {isStepper ? (
+                    <CheckoutStepper widgets={widgets} quoteId={quoteId} />
                 ) : (
                     <>
-                        {widgetDefinitions.map((widgetDefinition) => (
-                            <WidgetRenderer
-                                key={widgetDefinition.stepId}
-                                widgetDefinition={widgetDefinition}
-                            />
+                        {widgets.map((widget) => (
+                            <WidgetRenderer key={widget.stepId} widgetDefinition={widget} />
                         ))}
-                        <SubmitStep quoteId={quoteId} widgets={widgetDefinitions} />
+                        <SubmitStep quoteId={quoteId} widgets={widgets} />
                     </>
                 )}
-            </div>
+            </CheckoutShell>
         </CheckoutProvider>
     );
+}
+
+export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
+    const {data: quote, isLoading, error} = useQuote(quoteId);
+
+    if (isLoading) {
+        return <CheckoutMessage>Loading quote…</CheckoutMessage>;
+    }
+
+    if (error || !quote) {
+        return <CheckoutMessage error>Failed to load quote.</CheckoutMessage>;
+    }
+
+    return <CheckoutContent quote={quote} config={config} quoteId={quoteId} />;
 }

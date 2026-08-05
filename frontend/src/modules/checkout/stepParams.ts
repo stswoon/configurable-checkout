@@ -18,10 +18,6 @@ export function buildInitialStepParams(
     return params;
 }
 
-export function stepValueFromQuoteResponse(widgetType: string, quote: QuoteType): unknown {
-    return STEP_PARAM_HANDLERS[widgetType]?.fromResponse(quote);
-}
-
 export function buildQuotePatchFromStepParams(
     stepParams: Record<string, unknown>,
     widgets: WidgetDefinition[],

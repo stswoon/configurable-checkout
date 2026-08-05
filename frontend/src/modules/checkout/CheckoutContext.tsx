@@ -24,12 +24,8 @@ export interface CheckoutContextValue {
     isLastStep: boolean;
     nextStep: () => Promise<boolean>;
     prevStep: () => void;
-
     stepParams: StepParamsMap;
-    getStepParam: (stepId: string) => unknown;
     setStepParam: (stepId: string, value: unknown) => void;
-    setStepParams: (params: StepParamsMap | ((prev: StepParamsMap) => StepParamsMap)) => void;
-
     registerStepValidator: (stepId: string, validator: StepValidator) => void;
     unregisterStepValidator: (stepId: string) => void;
     validateSteps: () => Promise<boolean>;
@@ -52,7 +48,7 @@ export function CheckoutProvider({
     stepperView = "landing",
     stepIds = [],
 }: CheckoutProviderProps) {
-    const [stepParams, setStepParamsState] = useState<StepParamsMap>(initialStepParams);
+    const [stepParams, setStepParams] = useState<StepParamsMap>(initialStepParams);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const validatorsRef = useRef<Map<string, StepValidator>>(new Map());
 
@@ -60,22 +56,11 @@ export function CheckoutProvider({
     const currentStepId = stepIds[currentStepIndex];
     const isFirstStep = currentStepIndex === 0;
     const isLastStep = currentStepIndex >= stepCount - 1;
-
-    const getStepParam = useCallback(
-        (stepId: string) => stepParams[stepId],
-        [stepParams],
-    );
+    const isStepper = stepperView === "stepper";
 
     const setStepParam = useCallback((stepId: string, value: unknown) => {
-        setStepParamsState((prev) => ({...prev, [stepId]: value}));
+        setStepParams((prev) => ({...prev, [stepId]: value}));
     }, []);
-
-    const setStepParams = useCallback(
-        (params: StepParamsMap | ((prev: StepParamsMap) => StepParamsMap)) => {
-            setStepParamsState(params);
-        },
-        [],
-    );
 
     const registerStepValidator = useCallback((stepId: string, validator: StepValidator) => {
         validatorsRef.current.set(stepId, validator);
@@ -86,41 +71,34 @@ export function CheckoutProvider({
     }, []);
 
     const validateCurrentStep = useCallback(async () => {
-        if (stepperView !== "stepper") {
+        if (!isStepper) {
             return true;
         }
-        const stepId = stepIds[currentStepIndex];
-        const validator = stepIds.length > 0 ? validatorsRef.current.get(stepId) : undefined;
-        if (!validator) {
-            return true;
-        }
-        return validator();
-    }, [currentStepIndex, stepIds, stepperView]);
+        const validator = validatorsRef.current.get(stepIds[currentStepIndex]);
+        return validator ? validator() : true;
+    }, [currentStepIndex, isStepper, stepIds]);
 
     const nextStep = useCallback(async () => {
-        if (stepperView !== "stepper" || isLastStep) {
+        if (!isStepper || isLastStep) {
             return true;
         }
-
         if (!(await validateCurrentStep())) {
             scrollToFirstInvalidStep();
             return false;
         }
-
         setCurrentStepIndex((index) => Math.min(index + 1, stepCount - 1));
         return true;
-    }, [isLastStep, stepCount, stepperView, validateCurrentStep]);
+    }, [isLastStep, isStepper, stepCount, validateCurrentStep]);
 
     const prevStep = useCallback(() => {
-        if (stepperView !== "stepper" || isFirstStep) {
+        if (!isStepper || isFirstStep) {
             return;
         }
         setCurrentStepIndex((index) => Math.max(index - 1, 0));
-    }, [isFirstStep, stepperView]);
+    }, [isFirstStep, isStepper]);
 
     const validateSteps = useCallback(async () => {
-        const validators = [...validatorsRef.current.values()];
-        for (const validator of validators) {
+        for (const validator of validatorsRef.current.values()) {
             if (!(await validator())) {
                 return false;
             }
@@ -141,9 +119,7 @@ export function CheckoutProvider({
             nextStep,
             prevStep,
             stepParams,
-            getStepParam,
             setStepParam,
-            setStepParams,
             registerStepValidator,
             unregisterStepValidator,
             validateSteps,
@@ -160,18 +136,14 @@ export function CheckoutProvider({
             nextStep,
             prevStep,
             stepParams,
-            getStepParam,
             setStepParam,
-            setStepParams,
             registerStepValidator,
             unregisterStepValidator,
             validateSteps,
         ],
     );
 
-    return (
-        <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>
-    );
+    return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;
 }
 
 export function useCheckoutContext(): CheckoutContextValue {
@@ -182,23 +154,16 @@ export function useCheckoutContext(): CheckoutContextValue {
     return context;
 }
 
-interface CheckoutStepContextValue {
-    value: unknown;
-    setValue: (value: unknown) => void;
-}
+export function useCheckoutStepContext(stepId: string) {
+    const {stepParams, setStepParam} = useCheckoutContext();
 
-export function useCheckoutStepContext(stepId: string): CheckoutStepContextValue {
-    const {getStepParam, setStepParam} = useCheckoutContext();
     const setValue = useCallback(
         (value: unknown) => setStepParam(stepId, value),
         [setStepParam, stepId],
     );
 
-    return useMemo(
-        () => ({
-            value: getStepParam(stepId),
-            setValue,
-        }),
-        [getStepParam, stepId, setValue],
-    );
+    return {
+        value: stepParams[stepId],
+        setValue,
+    };
 }

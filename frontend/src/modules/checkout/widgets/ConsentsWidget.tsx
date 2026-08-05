@@ -20,11 +20,8 @@ const DEFAULT_CONSENTS: ConsentDef[] = [
 
 type ConsentsValue = Record<string, boolean>;
 
-function buildDefaultValues(consents: ConsentDef[], value?: ConsentsValue): ConsentsValue {
-    return consents.reduce<ConsentsValue>((acc, consent) => {
-        acc[consent.id] = Boolean(value?.[consent.id]);
-        return acc;
-    }, {});
+function defaultConsentsValue(consents: ConsentDef[], value?: ConsentsValue): ConsentsValue {
+    return Object.fromEntries(consents.map((c) => [c.id, Boolean(value?.[c.id])]));
 }
 
 export function ConsentsWidget({
@@ -34,11 +31,7 @@ export function ConsentsWidget({
     params,
 }: CheckoutWidgetProps<ConsentsValue | undefined, {consents?: ConsentDef[]}>) {
     const consents = params?.consents ?? DEFAULT_CONSENTS;
-
-    const form = useForm<ConsentsValue>({
-        defaultValues: buildDefaultValues(consents, value),
-    });
-
+    const form = useForm<ConsentsValue>({defaultValues: defaultConsentsValue(consents, value)});
     const {errorClassName} = useCheckoutWidgetForm(stepId, form, onSubmit);
 
     return (
@@ -71,7 +64,10 @@ export function ConsentsWidget({
                                             aria-invalid={fieldState.invalid}
                                         />
                                         <FieldContent>
-                                            <FieldLabel htmlFor={`consent-${consent.id}`} className="font-normal">
+                                            <FieldLabel
+                                                htmlFor={`consent-${consent.id}`}
+                                                className="font-normal"
+                                            >
                                                 {consent.label}
                                                 {consent.required ? " *" : ""}
                                             </FieldLabel>

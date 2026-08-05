@@ -15,7 +15,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/ui/dialog";
 import {Label} from "@/ui/label";
 
@@ -28,14 +27,10 @@ export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
     const {stepParams, validateSteps} = useCheckoutContext();
     const {mutate} = useSWRConfig();
     const [agreed, setAgreed] = useState(false);
-    const [open, setOpen] = useState(false);
+    const [debugOpen, setDebugOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
-
-    const handleShow = () => {
-        setOpen(true);
-    };
 
     const handleSubmit = async () => {
         setSubmitError(null);
@@ -68,18 +63,14 @@ export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
                             id="submit-terms"
                             className="mt-0.5"
                             checked={agreed}
-                            onCheckedChange={(checked) => setAgreed(checked)}
+                            onCheckedChange={(checked) => setAgreed(checked === true)}
                         />
                         <Label htmlFor="submit-terms" className="font-normal leading-snug">
                             I ready to submit
                         </Label>
                     </div>
                     <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleShow}
-                        >
+                        <Button type="button" variant="outline" onClick={() => setDebugOpen(true)}>
                             Debug Checkout Context
                         </Button>
                         <Button
@@ -92,9 +83,7 @@ export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
                             {isSubmitting ? "Submitting…" : "Submit"}
                         </Button>
                     </div>
-                    {submitError ? (
-                        <p className="text-destructive text-sm">{submitError}</p>
-                    ) : null}
+                    {submitError ? <p className="text-destructive text-sm">{submitError}</p> : null}
                     {submitSuccess ? (
                         <p className="text-sm text-muted-foreground">
                             Quote submitted — status is now IN_PROGRESS.
@@ -103,14 +92,11 @@ export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
                 </CardContent>
             </Card>
 
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger/>
+            <Dialog open={debugOpen} onOpenChange={setDebugOpen}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Checkout step params</DialogTitle>
-                        <DialogDescription>
-                            Values from CheckoutContext.stepParams
-                        </DialogDescription>
+                        <DialogDescription>Values from CheckoutContext.stepParams</DialogDescription>
                     </DialogHeader>
                     <pre className="max-h-80 overflow-auto rounded-lg bg-muted p-3 text-xs">
                         {JSON.stringify(stepParams, null, 2)}

@@ -1,6 +1,6 @@
-import {useCallback, useRef} from "react";
+import {useCallback, useEffect, useRef} from "react";
 import type {FieldValues, UseFormReturn} from "react-hook-form";
-import {useStepValidation} from "@/modules/checkout/hooks/useStepValidation";
+import {useCheckoutContext, type StepValidator} from "@/modules/checkout/CheckoutContext";
 
 /** Applied to a widget root when its form has validation errors. */
 export const CHECKOUT_WIDGET_ERROR_CLASS = "checkout-widget-error";
@@ -17,6 +17,17 @@ export function scrollToFirstInvalidStep() {
     requestAnimationFrame(() => {
         requestAnimationFrame(scrollToFirstCheckoutWidgetError);
     });
+}
+
+function useStepValidation(stepId: string, validate: StepValidator) {
+    const {registerStepValidator, unregisterStepValidator} = useCheckoutContext();
+    const validateRef = useRef(validate);
+    validateRef.current = validate;
+
+    useEffect(() => {
+        registerStepValidator(stepId, () => validateRef.current());
+        return () => unregisterStepValidator(stepId);
+    }, [stepId, registerStepValidator, unregisterStepValidator]);
 }
 
 export function useCheckoutWidgetForm<T extends FieldValues>(
@@ -42,8 +53,7 @@ export function useCheckoutWidgetForm<T extends FieldValues>(
 
     useStepValidation(stepId, validate);
 
-    const {errors} = form.formState;
-    const hasError = Object.keys(errors).length > 0;
+    const hasError = Object.keys(form.formState.errors).length > 0;
 
     return {
         hasError,
