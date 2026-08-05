@@ -1,5 +1,8 @@
 export type StepperView = "landing" | "stepper";
 
+export const SUBMIT_STEP_ID = "__submit__";
+export const SUBMIT_STEP_TITLE = "Submit";
+
 export interface CheckoutConfig {
     stepperView?: StepperView;
     widgets: WidgetDefinition[];

@@ -1,7 +1,7 @@
 import {useMemo} from "react";
 import {useQuote} from "@/hooks/useApi";
 import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
-import {CheckoutConfig} from "@/modules/checkout/types";
+import {CheckoutConfig, SUBMIT_STEP_ID} from "@/modules/checkout/types";
 import {CheckoutStep} from "@/modules/checkout/CheckoutStep";
 import {CheckoutStepper} from "@/modules/checkout/CheckoutStepper";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
@@ -21,8 +21,11 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const widgetDefinitions = config.widgets;
     const stepperView = resolveStepperView(config);
     const stepIds = useMemo(
-        () => widgetDefinitions.map((widget) => widget.stepId),
-        [widgetDefinitions],
+        () =>
+            stepperView === "stepper"
+                ? [...widgetDefinitions.map((widget) => widget.stepId), SUBMIT_STEP_ID]
+                : widgetDefinitions.map((widget) => widget.stepId),
+        [stepperView, widgetDefinitions],
     );
     const {data: quote, isLoading, error} = useQuote(quoteId);
 
