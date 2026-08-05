@@ -1,9 +1,10 @@
 import {useState} from "react";
 import {useSWRConfig} from "swr";
-import type {Delivery, QuoteType} from "@shared/QuoteType";
 import {submitQuote} from "@/lib/api";
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
 import {scrollToFirstCheckoutWidgetError} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import {buildQuotePatchFromStepParams} from "@/modules/checkout/stepParams";
+import type {WidgetDefinition} from "@/modules/checkout/types";
 import {Button} from "@/ui/button";
 import {Card, CardContent} from "@/ui/card";
 import {Checkbox} from "@/ui/checkbox";
@@ -13,47 +14,17 @@ import {
     DialogDescription,
     DialogFooter,
     DialogHeader,
-    DialogTitle, DialogTrigger,
+    DialogTitle,
+    DialogTrigger,
 } from "@/ui/dialog";
 import {Label} from "@/ui/label";
 
 export interface SubmitStepProps {
     quoteId: string;
+    widgets: WidgetDefinition[];
 }
 
-function isDelivery(value: unknown): value is Delivery {
-    if (!value || typeof value !== "object") {
-        return false;
-    }
-    const candidate = value as Record<string, unknown>;
-    return typeof candidate.address === "string" && typeof candidate.date === "string";
-}
-
-function isUserInfo(value: unknown): value is QuoteType["userInfo"] {
-    if (!value || typeof value !== "object") {
-        return false;
-    }
-    const candidate = value as Record<string, unknown>;
-    return (
-        typeof candidate.documentType === "string" &&
-        typeof candidate.documentId === "string"
-    );
-}
-
-function buildQuotePatch(stepParams: Record<string, unknown>): Partial<QuoteType> {
-    const patch: Partial<QuoteType> = {};
-    const delivery = stepParams.delivery;
-    if (isDelivery(delivery)) {
-        patch.delivery = delivery;
-    }
-    const userInfo = stepParams.userInfo;
-    if (isUserInfo(userInfo)) {
-        patch.userInfo = userInfo;
-    }
-    return patch;
-}
-
-export function SubmitStep({quoteId}: SubmitStepProps) {
+export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
     const {stepParams, validateSteps} = useCheckoutContext();
     const {mutate} = useSWRConfig();
     const [agreed, setAgreed] = useState(false);
@@ -82,7 +53,8 @@ export function SubmitStep({quoteId}: SubmitStepProps) {
 
         setIsSubmitting(true);
         try {
-            const updated = await submitQuote(quoteId, buildQuotePatch(stepParams));
+            const patch = buildQuotePatchFromStepParams(stepParams, widgets);
+            const updated = await submitQuote(quoteId, patch);
             await mutate(["quote", quoteId], updated, {revalidate: false});
             setSubmitSuccess(true);
         } catch {

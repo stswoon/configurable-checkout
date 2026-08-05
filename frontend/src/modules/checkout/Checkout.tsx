@@ -1,9 +1,8 @@
-import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
 import {CheckoutSteps} from "@/modules/checkout/CheckoutSteps";
 import {CheckoutConfig} from "@/modules/checkout/types";
 
 interface CheckoutRendererProps {
-    config: CheckoutConfig
+    config: CheckoutConfig;
     quoteId: string;
 }
 
@@ -20,9 +19,5 @@ export function Checkout({config, quoteId}: CheckoutRendererProps) {
         );
     }
 
-    return (
-        <CheckoutProvider>
-            <CheckoutSteps config={config} quoteId={quoteId} />
-        </CheckoutProvider>
-    );
+    return <CheckoutSteps config={config} quoteId={quoteId} />;
 }

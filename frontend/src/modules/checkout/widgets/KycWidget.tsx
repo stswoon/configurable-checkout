@@ -100,6 +100,11 @@ export function KycWidget({
       setVerifiedUser(next);
       form.setValue("verifiedUserId", user.id);
       form.setValue("verifiedUserName", user.name);
+      onSubmit({
+        identification,
+        verifiedUserId: user.id,
+        verifiedUserName: user.name,
+      });
       await form.trigger("identification");
     } catch {
       clearVerification();

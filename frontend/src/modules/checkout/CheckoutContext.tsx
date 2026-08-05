@@ -12,6 +12,7 @@ export type StepParamsMap = Record<string, unknown>;
 export type StepValidator = () => boolean | Promise<boolean>;
 
 export interface CheckoutContextValue {
+    quoteId: string;
     stepParams: StepParamsMap;
     getStepParam: (stepId: string) => unknown;
     setStepParam: (stepId: string, value: unknown) => void;
@@ -26,10 +27,15 @@ const CheckoutContext = createContext<CheckoutContextValue | null>(null);
 
 export interface CheckoutProviderProps {
     children: ReactNode;
+    quoteId: string;
     initialStepParams?: StepParamsMap;
 }
 
-export function CheckoutProvider({children, initialStepParams = {}}: CheckoutProviderProps) {
+export function CheckoutProvider({
+    children,
+    quoteId,
+    initialStepParams = {},
+}: CheckoutProviderProps) {
     const [stepParams, setStepParamsState] = useState<StepParamsMap>(initialStepParams);
     const validatorsRef = useRef<Map<string, StepValidator>>(new Map());
 
@@ -69,6 +75,7 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
 
     const value = useMemo(
         () => ({
+            quoteId,
             stepParams,
             getStepParam,
             setStepParam,
@@ -78,6 +85,7 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
             validateSteps,
         }),
         [
+            quoteId,
             stepParams,
             getStepParam,
             setStepParam,
