@@ -90,6 +90,20 @@ export async function updateQuote(
   return res.json();
 }
 
+/** Persist checkout answers and move quote to IN_PROGRESS. */
+export async function submitQuote(
+  id: string,
+  patch: Partial<QuoteType> = {},
+): Promise<QuoteType> {
+  const res = await fetch(`/api/quotes/${id}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Failed to submit quote");
+  return res.json();
+}
+
 export function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 }

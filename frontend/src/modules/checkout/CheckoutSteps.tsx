@@ -30,7 +30,7 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
                     />
                 </CheckoutStep>
             ))}
-            <SubmitStep/>
+            <SubmitStep quoteId={quoteId} />
         </div>
     );
 }
