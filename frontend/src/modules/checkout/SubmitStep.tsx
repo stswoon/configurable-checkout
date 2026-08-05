@@ -37,14 +37,13 @@ export function SubmitStep() {
                             onCheckedChange={(checked) => setAgreed(checked === true)}
                         />
                         <Label htmlFor="submit-terms" className="font-normal leading-snug">
-                            I agree with terms
+                            I ready to submit
                         </Label>
                     </div>
                     <Button
                         type="button"
                         disabled={!agreed}
                         onClick={handleSubmit}
-                        className="w-full"
                     >
                         Submit
                     </Button>
