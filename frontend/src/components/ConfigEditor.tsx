@@ -61,7 +61,7 @@ export function ConfigEditor() {
 
   return (
     <Card className="flex h-full flex-col border-0 shadow-none">
-      <CardContent className="flex flex-1 flex-col gap-4">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="quote-id">Quote ID</Label>
           <AsyncSelect
@@ -76,13 +76,13 @@ export function ConfigEditor() {
           />
         </div>
 
-        <div className="flex flex-1 flex-col gap-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
           <Label htmlFor="config-json">JSON</Label>
           <Textarea
             id="config-json"
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
-            className="min-h-0 flex-1 resize-none font-mono text-xs leading-relaxed"
+            className="field-sizing-fixed min-h-0 flex-1 resize-none overflow-y-auto font-mono text-xs leading-relaxed"
             spellCheck={false}
           />
         </div>
