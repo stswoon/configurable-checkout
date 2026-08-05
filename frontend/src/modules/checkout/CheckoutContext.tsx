@@ -7,7 +7,7 @@ import {
     useState,
     type ReactNode,
 } from "react";
-import {scrollToFirstCheckoutWidgetError} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import {scrollToFirstInvalidStep} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {StepperView} from "@/modules/checkout/types";
 
 export type StepParamsMap = Record<string, unknown>;
@@ -16,6 +16,8 @@ export type StepValidator = () => boolean | Promise<boolean>;
 export interface CheckoutContextValue {
     quoteId: string;
     stepperView: StepperView;
+    stepIds: string[];
+    currentStepId: string | undefined;
     stepCount: number;
     currentStepIndex: number;
     isFirstStep: boolean;
@@ -55,6 +57,7 @@ export function CheckoutProvider({
     const validatorsRef = useRef<Map<string, StepValidator>>(new Map());
 
     const stepCount = stepIds.length;
+    const currentStepId = stepIds[currentStepIndex];
     const isFirstStep = currentStepIndex === 0;
     const isLastStep = currentStepIndex >= stepCount - 1;
 
@@ -100,11 +103,7 @@ export function CheckoutProvider({
         }
 
         if (!(await validateCurrentStep())) {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    scrollToFirstCheckoutWidgetError();
-                });
-            });
+            scrollToFirstInvalidStep();
             return false;
         }
 
@@ -120,19 +119,21 @@ export function CheckoutProvider({
     }, [isFirstStep, stepperView]);
 
     const validateSteps = useCallback(async () => {
-        // Preserve registration order (widget mount / config order) so the first
-        // failing step matches the topmost error in the DOM.
-        const results: boolean[] = [];
-        for (const validator of validatorsRef.current.values()) {
-            results.push(await validator());
+        const validators = [...validatorsRef.current.values()];
+        for (const validator of validators) {
+            if (!(await validator())) {
+                return false;
+            }
         }
-        return !results.includes(false);
+        return true;
     }, []);
 
     const value = useMemo(
         () => ({
             quoteId,
             stepperView,
+            stepIds,
+            currentStepId,
             stepCount,
             currentStepIndex,
             isFirstStep,
@@ -150,6 +151,8 @@ export function CheckoutProvider({
         [
             quoteId,
             stepperView,
+            stepIds,
+            currentStepId,
             stepCount,
             currentStepIndex,
             isFirstStep,
@@ -185,14 +188,17 @@ interface CheckoutStepContextValue {
 }
 
 export function useCheckoutStepContext(stepId: string): CheckoutStepContextValue {
-    const context = useContext(CheckoutContext);
-    if (!context) {
-        throw new Error("useCheckoutContext must be used within CheckoutProvider");
-    }
-    return {
-        value: context.getStepParam(stepId),
-        setValue: (value: unknown) => {
-            context.setStepParam(stepId, value)
-        }
-    };
+    const {getStepParam, setStepParam} = useCheckoutContext();
+    const setValue = useCallback(
+        (value: unknown) => setStepParam(stepId, value),
+        [setStepParam, stepId],
+    );
+
+    return useMemo(
+        () => ({
+            value: getStepParam(stepId),
+            setValue,
+        }),
+        [getStepParam, stepId, setValue],
+    );
 }

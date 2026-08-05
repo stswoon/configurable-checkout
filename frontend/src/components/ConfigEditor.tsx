@@ -8,8 +8,8 @@ import { Textarea } from "@/ui/textarea";
 import { Card, CardContent } from "@/ui/card";
 import {
   useConfigStore,
-  type ConfigJson,
 } from "@/stores/configStore";
+import { parseCheckoutConfig } from "@/modules/checkout/types";
 import { fetchExampleConfig } from "@/lib/api";
 import { useQuoteIds } from "@/hooks/useApi";
 
@@ -44,11 +44,11 @@ export function ConfigEditor() {
   const handleApply = useCallback(() => {
     setError(null);
     try {
-      const parsed = JSON5.parse(jsonText) as unknown;
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("Configuration must be a JSON object");
+      const parsed = parseCheckoutConfig(JSON5.parse(jsonText));
+      if (!parsed) {
+        throw new Error("Configuration must be a JSON object with a widgets array");
       }
-      applyConfig(parsed as ConfigJson, jsonText, quoteId || null);
+      applyConfig(parsed, jsonText, quoteId || null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invalid JSON5");
     }

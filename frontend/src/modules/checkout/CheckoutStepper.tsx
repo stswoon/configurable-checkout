@@ -1,7 +1,6 @@
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
-import {CheckoutStep} from "@/modules/checkout/CheckoutStep";
 import {SubmitStep} from "@/modules/checkout/SubmitStep";
-import {SUBMIT_STEP_TITLE} from "@/modules/checkout/types";
+import {SUBMIT_STEP_ID, SUBMIT_STEP_TITLE} from "@/modules/checkout/types";
 import type {WidgetDefinition} from "@/modules/checkout/types";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
 import {Button} from "@/ui/button";
@@ -14,6 +13,7 @@ export interface CheckoutStepperProps {
 export function CheckoutStepper({widgets, quoteId}: CheckoutStepperProps) {
     const {
         currentStepIndex,
+        currentStepId,
         stepCount,
         isFirstStep,
         isLastStep,
@@ -21,7 +21,7 @@ export function CheckoutStepper({widgets, quoteId}: CheckoutStepperProps) {
         prevStep,
     } = useCheckoutContext();
 
-    const isSubmitStep = currentStepIndex === widgets.length;
+    const isSubmitStep = currentStepId === SUBMIT_STEP_ID;
     const currentWidget = isSubmitStep ? null : widgets[currentStepIndex];
     const stepTitle = isSubmitStep
         ? SUBMIT_STEP_TITLE
@@ -36,12 +36,7 @@ export function CheckoutStepper({widgets, quoteId}: CheckoutStepperProps) {
             {isSubmitStep ? (
                 <SubmitStep quoteId={quoteId} widgets={widgets} />
             ) : currentWidget ? (
-                <CheckoutStep
-                    key={currentWidget.stepId}
-                    title={currentWidget.stepTitle}
-                >
-                    <WidgetRenderer widgetDefinition={currentWidget} />
-                </CheckoutStep>
+                <WidgetRenderer key={currentWidget.stepId} widgetDefinition={currentWidget} />
             ) : null}
 
             {!isLastStep ? (

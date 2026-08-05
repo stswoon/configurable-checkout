@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import path from "path";
-import JSON5 from "json5";
 
 export async function ensureDir(dirPath: string): Promise<void> {
   await fs.mkdir(dirPath, { recursive: true });
@@ -10,15 +9,6 @@ export async function readJsonFile<T>(filePath: string, fallback: T): Promise<T>
   try {
     const raw = await fs.readFile(filePath, "utf-8");
     return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-export async function readJson5File<T>(filePath: string, fallback: T): Promise<T> {
-  try {
-    const raw = await fs.readFile(filePath, "utf-8");
-    return JSON5.parse(raw) as T;
   } catch {
     return fallback;
   }

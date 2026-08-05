@@ -1,26 +1,21 @@
 import { create } from "zustand";
 import JSON5 from "json5";
+import { parseCheckoutConfig, type CheckoutConfig } from "@/modules/checkout/types";
 
 const CONFIG_SOURCE_STORAGE_KEY = "configurable-checkout-config-source";
 const LEGACY_CONFIG_STORAGE_KEY = "configurable-checkout-config";
 const QUOTE_ID_STORAGE_KEY = "configurable-checkout-quote-id";
 
-export type ConfigJson = Record<string, unknown>;
-
 interface ConfigStore {
-  config: ConfigJson | null;
+  config: CheckoutConfig | null;
   configSource: string | null;
   quoteId: string | null;
-  applyConfig: (config: ConfigJson, configSource: string, quoteId: string | null) => void;
+  applyConfig: (config: CheckoutConfig, configSource: string, quoteId: string | null) => void;
 }
 
-function parseConfigSource(source: string): ConfigJson | null {
+function parseConfigSource(source: string): CheckoutConfig | null {
   try {
-    const parsed = JSON5.parse(source) as unknown;
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return null;
-    }
-    return parsed as ConfigJson;
+    return parseCheckoutConfig(JSON5.parse(source));
   } catch {
     return null;
   }

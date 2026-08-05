@@ -1,1 +1,30 @@
-import {useCallback, useEffect, useRef} from "react";import {UnknownWidget} from "./widgets/UnknownWidget";import {WIDGET_REGISTRY} from "./registry";import {useCheckoutContext, useCheckoutStepContext} from "@/modules/checkout/CheckoutContext";import type {StepValidator} from "@/modules/checkout/CheckoutContext";import {WidgetDefinition} from "@/lib/api";interface WidgetRendererProps {    widgetDefinition: WidgetDefinition;}export function WidgetRenderer({widgetDefinition}: WidgetRendererProps) {    const {stepId, widgetType} = widgetDefinition;    const {value, setValue} = useCheckoutStepContext(stepId);    const {quoteId, registerStepValidator, unregisterStepValidator} = useCheckoutContext();    const validateRef = useRef<StepValidator>(() => true);    const handleSubmit = (value: unknown) => {        setValue(value);    };    const handleRegisterValidate = useCallback((validate: StepValidator) => {        validateRef.current = validate;    }, []);    useEffect(() => {        registerStepValidator(stepId, () => validateRef.current());        return () => unregisterStepValidator(stepId);    }, [stepId, registerStepValidator, unregisterStepValidator]);    const Component = WIDGET_REGISTRY[widgetType];    if (!Component) {        return <UnknownWidget widgetType={widgetType}/>;    }    return (        <Component            value={value}            onSubmit={handleSubmit}            params={widgetDefinition.widgetParams}            quoteId={quoteId}            onRegisterValidate={handleRegisterValidate}        />    );}
+import {UnknownWidget} from "./widgets/UnknownWidget";
+import {WIDGET_REGISTRY} from "./registry";
+import {useCheckoutContext, useCheckoutStepContext} from "@/modules/checkout/CheckoutContext";
+import type {WidgetDefinition} from "@/modules/checkout/types";
+
+interface WidgetRendererProps {
+    widgetDefinition: WidgetDefinition;
+}
+
+export function WidgetRenderer({widgetDefinition}: WidgetRendererProps) {
+    const {stepId, widgetType} = widgetDefinition;
+    const {value, setValue} = useCheckoutStepContext(stepId);
+    const {quoteId} = useCheckoutContext();
+
+    const Component = WIDGET_REGISTRY[widgetType];
+
+    if (!Component) {
+        return <UnknownWidget widgetType={widgetType}/>;
+    }
+
+    return (
+        <Component
+            stepId={stepId}
+            value={value}
+            onSubmit={setValue}
+            params={widgetDefinition.widgetParams}
+            quoteId={quoteId}
+        />
+    );
+}

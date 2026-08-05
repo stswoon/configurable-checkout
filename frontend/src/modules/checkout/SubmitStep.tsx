@@ -2,7 +2,7 @@ import {useState} from "react";
 import {useSWRConfig} from "swr";
 import {submitQuote} from "@/lib/api";
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
-import {scrollToFirstCheckoutWidgetError} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import {scrollToFirstInvalidStep} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import {buildQuotePatchFromStepParams} from "@/modules/checkout/stepParams";
 import type {WidgetDefinition} from "@/modules/checkout/types";
 import {Button} from "@/ui/button";
@@ -42,12 +42,7 @@ export function SubmitStep({quoteId, widgets}: SubmitStepProps) {
         setSubmitSuccess(false);
 
         if (!(await validateSteps())) {
-            // Wait for RHF error class / aria-invalid to commit before scrolling.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    scrollToFirstCheckoutWidgetError();
-                });
-            });
+            scrollToFirstInvalidStep();
             return;
         }
 

@@ -14,3 +14,14 @@ export interface WidgetDefinition {
     widgetType: string;
     widgetParams?: Record<string, unknown>;
 }
+
+export function parseCheckoutConfig(raw: unknown): CheckoutConfig | null {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+        return null;
+    }
+    const candidate = raw as Record<string, unknown>;
+    if (!Array.isArray(candidate.widgets)) {
+        return null;
+    }
+    return raw as CheckoutConfig;
+}

@@ -1,7 +1,6 @@
-import {useCallback} from "react";
+import {useCallback, useRef} from "react";
 import type {FieldValues, UseFormReturn} from "react-hook-form";
-import {useRegisterCheckoutValidation} from "@/modules/checkout/hooks/useRegisterCheckoutValidation";
-import type {CheckoutWidgetProps} from "@/modules/checkout/widgets/types";
+import {useStepValidation} from "@/modules/checkout/hooks/useStepValidation";
 
 /** Applied to a widget root when its form has validation errors. */
 export const CHECKOUT_WIDGET_ERROR_CLASS = "checkout-widget-error";
@@ -13,13 +12,22 @@ export function scrollToFirstCheckoutWidgetError() {
     target?.scrollIntoView({behavior: "smooth", block: "center"});
 }
 
+/** Wait for RHF error class / aria-invalid to commit before scrolling. */
+export function scrollToFirstInvalidStep() {
+    requestAnimationFrame(() => {
+        requestAnimationFrame(scrollToFirstCheckoutWidgetError);
+    });
+}
+
 export function useCheckoutWidgetForm<T extends FieldValues>(
+    stepId: string,
     form: UseFormReturn<T>,
     onSubmit: (value: T) => void,
-    onRegisterValidate?: CheckoutWidgetProps<unknown, unknown>["onRegisterValidate"],
     options?: {submitOnValidate?: boolean},
 ) {
     const submitOnValidate = options?.submitOnValidate ?? true;
+    const onSubmitRef = useRef(onSubmit);
+    onSubmitRef.current = onSubmit;
 
     const validate = useCallback(async () => {
         const valid = await form.trigger();
@@ -27,12 +35,12 @@ export function useCheckoutWidgetForm<T extends FieldValues>(
             return false;
         }
         if (submitOnValidate) {
-            onSubmit(form.getValues());
+            onSubmitRef.current(form.getValues());
         }
         return true;
-    }, [form, onSubmit, submitOnValidate]);
+    }, [form, submitOnValidate]);
 
-    useRegisterCheckoutValidation(onRegisterValidate, validate);
+    useStepValidation(stepId, validate);
 
     const {errors} = form.formState;
     const hasError = Object.keys(errors).length > 0;

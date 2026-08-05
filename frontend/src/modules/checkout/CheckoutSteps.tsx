@@ -2,7 +2,6 @@ import {useMemo} from "react";
 import {useQuote} from "@/hooks/useApi";
 import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
 import {CheckoutConfig, SUBMIT_STEP_ID} from "@/modules/checkout/types";
-import {CheckoutStep} from "@/modules/checkout/CheckoutStep";
 import {CheckoutStepper} from "@/modules/checkout/CheckoutStepper";
 import {WidgetRenderer} from "@/modules/checkout/WidgetRenderer";
 import {SubmitStep} from "@/modules/checkout/SubmitStep";
@@ -13,13 +12,9 @@ export interface CheckoutStepsProps {
     quoteId: string;
 }
 
-function resolveStepperView(config: CheckoutConfig) {
-    return config.stepperView === "stepper" ? "stepper" : "landing";
-}
-
 export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const widgetDefinitions = config.widgets;
-    const stepperView = resolveStepperView(config);
+    const stepperView = config.stepperView === "stepper" ? "stepper" : "landing";
     const stepIds = useMemo(
         () =>
             stepperView === "stepper"
@@ -68,12 +63,10 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
                 ) : (
                     <>
                         {widgetDefinitions.map((widgetDefinition) => (
-                            <CheckoutStep
+                            <WidgetRenderer
                                 key={widgetDefinition.stepId}
-                                title={widgetDefinition.stepTitle}
-                            >
-                                <WidgetRenderer widgetDefinition={widgetDefinition} />
-                            </CheckoutStep>
+                                widgetDefinition={widgetDefinition}
+                            />
                         ))}
                         <SubmitStep quoteId={quoteId} widgets={widgetDefinitions} />
                     </>

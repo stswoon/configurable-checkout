@@ -1,16 +1,14 @@
 import type { QuoteType } from "@shared/QuoteType";
 
-export interface WidgetDefinition {
-  stepId: string;
-  stepTitle: string;
-  widgetType: string;
-  widgetParams?: Record<string, unknown>;
-}
-
-export interface CheckoutConfig {
+/** Backend-persisted config envelope (legacy widget schema). */
+export interface StoredCheckoutConfig {
   id: string;
   quoteId: string;
-  widgets: WidgetDefinition[];
+  widgets: Array<{
+    id: string;
+    type: string;
+    props?: Record<string, unknown>;
+  }>;
   updatedAt: string;
 }
 
@@ -26,7 +24,7 @@ export type { QuoteType as Quote } from "@shared/QuoteType";
 
 export const DEFAULT_CONFIG_ID = "default";
 
-export async function fetchConfig(id: string): Promise<CheckoutConfig> {
+export async function fetchConfig(id: string): Promise<StoredCheckoutConfig> {
   const res = await fetch(`/api/config/${id}`);
   if (!res.ok) throw new Error("Failed to load config");
   return res.json();
@@ -38,7 +36,7 @@ export async function fetchExampleConfig(): Promise<string> {
   return res.text();
 }
 
-export async function saveConfig(id: string, config: Omit<CheckoutConfig, "id" | "updatedAt">): Promise<CheckoutConfig> {
+export async function saveConfig(id: string, config: Omit<StoredCheckoutConfig, "id" | "updatedAt">): Promise<StoredCheckoutConfig> {
   const res = await fetch(`/api/config/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
