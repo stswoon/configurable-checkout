@@ -17,8 +17,8 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const {data: quote} = useQuote(quoteId);
     const {stepParams, validateSteps} = useCheckoutContext()
 
-    const handleSubmit = () => {
-        if (!validateSteps()) {
+    const handleSubmit = async () => {
+        if (!(await validateSteps())) {
             return;
         }
         console.log("stepParams:", stepParams);

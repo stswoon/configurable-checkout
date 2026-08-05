@@ -5,9 +5,11 @@ import {OrderDetailsWidget} from "@/modules/checkout/widgets/OrderDetailsWidget"
 import {DeliveryWidget} from "@/modules/checkout/widgets/DeliveryWidget";
 import {ConsentsWidget} from "@/modules/checkout/widgets/ConsentsWidget";
 
-export const WIDGET_REGISTRY: Record<string, ComponentType<CheckoutWidgetProps<unknown, unknown>>> = {
-    KycWidget,
-    OrderDetailsWidget,
-    DeliveryWidget,
-    ConsentsWidget,
+type RegisteredWidget = ComponentType<CheckoutWidgetProps<unknown, unknown>>;
+
+export const WIDGET_REGISTRY: Record<string, RegisteredWidget> = {
+    KycWidget: KycWidget as RegisteredWidget,
+    OrderDetailsWidget: OrderDetailsWidget as RegisteredWidget,
+    DeliveryWidget: DeliveryWidget as RegisteredWidget,
+    ConsentsWidget: ConsentsWidget as RegisteredWidget,
 };

@@ -1,14 +1,36 @@
-import {useCallback} from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
-import { Input } from "@/ui/input";
-import { Label } from "@/ui/label";
-import { Truck } from "lucide-react";
-import {useRegisterCheckoutValidation} from "@/modules/checkout/hooks/useRegisterCheckoutValidation";
-import type { CheckoutWidgetProps } from "./types";
+import {Controller, useForm} from "react-hook-form";
+import {Card, CardContent, CardHeader, CardTitle} from "@/ui/card";
+import {Field, FieldGroup, FieldLabel} from "@/ui/field";
+import {Input} from "@/ui/input";
+import {Truck} from "lucide-react";
+import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import type {CheckoutWidgetProps} from "./types";
 
-export function DeliveryWidget({ quote, onRegisterValidate }: CheckoutWidgetProps<unknown, unknown>) {
-  const validate = useCallback(() => true, []);
-  useRegisterCheckoutValidation(onRegisterValidate, validate);
+interface DeliveryValue {
+  address: string;
+  date: string;
+}
+
+export function DeliveryWidget({
+  quote,
+  onSubmit,
+  onRegisterValidate,
+}: CheckoutWidgetProps<DeliveryValue | undefined, unknown>) {
+  const form = useForm<DeliveryValue>({
+    defaultValues: {
+      address: quote?.delivery.address ?? "",
+      date: quote?.delivery.date ?? "",
+    },
+    values: quote
+      ? {
+          address: quote.delivery.address,
+          date: quote.delivery.date,
+        }
+      : undefined,
+  });
+
+  useCheckoutWidgetForm(form, onSubmit, onRegisterValidate);
+
   if (!quote) {
     return (
       <Card>
@@ -23,29 +45,39 @@ export function DeliveryWidget({ quote, onRegisterValidate }: CheckoutWidgetProp
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-            <Truck/>
-            <CardTitle className="text-base"> Delivery </CardTitle>
+          <Truck />
+          <CardTitle className="text-base">Delivery</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 pt-0">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="delivery-address">Address</Label>
-          <Input
-            id="delivery-address"
-            type="text"
-            defaultValue={quote.delivery.address}
-            readOnly
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="delivery-date">Delivery date</Label>
-          <Input
-            id="delivery-date"
-            type="text"
-            defaultValue={quote.delivery.date}
-            readOnly
-          />
-        </div>
+      <CardContent className="pt-0">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+          }}
+        >
+          <FieldGroup>
+            <Controller
+              name="address"
+              control={form.control}
+              render={({field}) => (
+                <Field>
+                  <FieldLabel htmlFor="delivery-address">Address</FieldLabel>
+                  <Input {...field} id="delivery-address" type="text" readOnly />
+                </Field>
+              )}
+            />
+            <Controller
+              name="date"
+              control={form.control}
+              render={({field}) => (
+                <Field>
+                  <FieldLabel htmlFor="delivery-date">Delivery date</FieldLabel>
+                  <Input {...field} id="delivery-date" type="text" readOnly />
+                </Field>
+              )}
+            />
+          </FieldGroup>
+        </form>
       </CardContent>
     </Card>
   );

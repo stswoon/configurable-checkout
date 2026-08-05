@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export type StepParamsMap = Record<string, unknown>;
-export type StepValidator = () => boolean;
+export type StepValidator = () => boolean | Promise<boolean>;
 
 export interface CheckoutContextValue {
     stepParams: StepParamsMap;
@@ -19,7 +19,7 @@ export interface CheckoutContextValue {
 
     registerStepValidator: (stepId: string, validator: StepValidator) => void;
     unregisterStepValidator: (stepId: string) => void;
-    validateSteps: () => boolean;
+    validateSteps: () => Promise<boolean>;
 }
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);
@@ -57,12 +57,11 @@ export function CheckoutProvider({children, initialStepParams = {}}: CheckoutPro
         validatorsRef.current.delete(stepId);
     }, []);
 
-    const validateSteps = useCallback(() => {
-        const validArray = [];
-        for (const validator of validatorsRef.current.values()) {
-            validArray.push(validator());
-        }
-        return !validArray.includes(false);
+    const validateSteps = useCallback(async () => {
+        const results = await Promise.all(
+            [...validatorsRef.current.values()].map((validator) => validator()),
+        );
+        return !results.includes(false);
     }, []);
 
     const value = useMemo(

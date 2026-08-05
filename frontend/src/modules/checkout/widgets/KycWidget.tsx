@@ -1,66 +1,80 @@
-import {useCallback, useState} from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
-import { Input } from "@/ui/input";
-import { Label } from "@/ui/label";
-import { ShieldCheck } from "lucide-react";
-import {useRegisterCheckoutValidation} from "@/modules/checkout/hooks/useRegisterCheckoutValidation";
-import type { CheckoutWidgetProps } from "./types";
+import {Controller, useForm} from "react-hook-form";
+import {Card, CardContent, CardHeader, CardTitle} from "@/ui/card";
+import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/field";
+import {Input} from "@/ui/input";
+import {ShieldCheck} from "lucide-react";
+import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import type {CheckoutWidgetProps} from "./types";
 
 interface KycValue {
   identification: string;
 }
 
-export function KycWidget({value, onSubmit, params, onRegisterValidate}: CheckoutWidgetProps<KycValue | undefined, { identificationType?: string }>) {
+export function KycWidget({
+  value,
+  onSubmit,
+  params,
+  onRegisterValidate,
+}: CheckoutWidgetProps<KycValue | undefined, {identificationType?: string}>) {
   const identificationType = params?.identificationType ?? "phone";
   const isPhone = identificationType === "phone";
-  const storedValue = value?.identification ?? "";
-  const [identification, setIdentification] = useState(storedValue);
-  const [error, setError] = useState<string | null>(null);
 
-  const validate = useCallback(() => {
-    const trimmed = identification.trim();
-    if (!trimmed) {
-      setError(`${identificationType} is required`);
-      return false;
-    }
-    setError(null);
-    onSubmit({identification: trimmed});
-    return true;
-  }, [identification, identificationType, onSubmit]);
+  const form = useForm<KycValue>({
+    defaultValues: {
+      identification: value?.identification ?? "",
+    },
+  });
 
-  useRegisterCheckoutValidation(onRegisterValidate, validate);
+  useCheckoutWidgetForm(
+    form,
+    (data) => onSubmit({identification: data.identification.trim()}),
+    onRegisterValidate,
+  );
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck />
-          <CardTitle className="text-base">Know Your Customer </CardTitle>
+          <CardTitle className="text-base">Know Your Customer</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 pt-0">
-        <p className="text-sm text-muted-foreground">
-          Verify your identity using {isPhone ? "phone number" : "email address"}.
-        </p>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor={`kyc-${identificationType}`} className="capitalize">
-            {identificationType}
-          </Label>
-          <Input
-            id={`kyc-${identificationType}`}
-            type={isPhone ? "tel" : "email"}
-            placeholder={isPhone ? "+1 555 000 0000" : "you@example.com"}
-            value={identification}
-            onChange={(event) => {
-              setIdentification(event.target.value);
-              if (error) {
-                setError(null);
-              }
-            }}
-            aria-invalid={error != null}
-          />
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        </div>
+      <CardContent className="pt-0">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+          }}
+        >
+          <FieldGroup>
+            <FieldDescription>
+              Verify your identity using {isPhone ? "phone number" : "email address"}.
+            </FieldDescription>
+            <Controller
+              name="identification"
+              control={form.control}
+              rules={{
+                required: `${identificationType} is required`,
+                validate: (current) =>
+                  current.trim().length > 0 || `${identificationType} is required`,
+              }}
+              render={({field, fieldState}) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel htmlFor={`kyc-${identificationType}`} className="capitalize">
+                    {identificationType}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={`kyc-${identificationType}`}
+                    type={isPhone ? "tel" : "email"}
+                    placeholder={isPhone ? "+1 555 000 0000" : "you@example.com"}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                </Field>
+              )}
+            />
+          </FieldGroup>
+        </form>
       </CardContent>
     </Card>
   );
