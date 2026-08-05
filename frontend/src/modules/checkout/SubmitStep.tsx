@@ -9,7 +9,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogHeader,
-    DialogTitle,
+    DialogTitle, DialogTrigger,
 } from "@/ui/dialog";
 import {Label} from "@/ui/label";
 
@@ -51,6 +51,7 @@ export function SubmitStep() {
             </Card>
 
             <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger/>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Checkout step params</DialogTitle>
