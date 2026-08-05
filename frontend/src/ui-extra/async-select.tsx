@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Select,
   SelectContent,
@@ -52,14 +53,30 @@ export function AsyncSelect({
       ? emptyMessage
       : placeholder;
 
+  const items = useMemo(
+    () => [
+      { label: resolvedPlaceholder, value: null },
+      ...normalizedOptions.map((option) => ({
+        label: option.label ?? option.value,
+        value: option.value,
+      })),
+    ],
+    [normalizedOptions, resolvedPlaceholder],
+  );
+
   return (
     <Select
-      value={value || undefined}
-      onValueChange={onValueChange}
+      items={items}
+      value={value || null}
+      onValueChange={(nextValue) => {
+        if (typeof nextValue === "string") {
+          onValueChange(nextValue);
+        }
+      }}
       disabled={disabled || isLoading || isEmpty}
     >
-      <SelectTrigger id={id}>
-        <SelectValue placeholder={resolvedPlaceholder} />
+      <SelectTrigger id={id} className="w-full">
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
