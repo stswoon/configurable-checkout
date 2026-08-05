@@ -17,6 +17,7 @@ export interface CheckoutConfig {
 export interface IdpUser {
   id: string;
   email: string;
+  phone: string;
   name: string;
   roles: string[];
 }
@@ -44,6 +45,22 @@ export async function saveConfig(id: string, config: Omit<CheckoutConfig, "id" |
 export async function fetchUser(id: string): Promise<IdpUser> {
   const res = await fetch(`/api/idp/users/${id}`);
   if (!res.ok) throw new Error("Failed to load user");
+  return res.json();
+}
+
+export async function lookupUser(query: {
+  email?: string;
+  phone?: string;
+}): Promise<IdpUser> {
+  const res = await fetch("/api/idp/lookup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(query),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? "User not found");
+  }
   return res.json();
 }
 
