@@ -1,6 +1,5 @@
-import {CheckoutProvider, type StepParamsMap} from "@/modules/checkout/CheckoutContext";
+import {CheckoutProvider} from "@/modules/checkout/CheckoutContext";
 import {CheckoutSteps} from "@/modules/checkout/CheckoutSteps";
-import {SubmitStep} from "@/modules/checkout/SubmitStep";
 import {CheckoutConfig} from "@/modules/checkout/types";
 
 interface CheckoutRendererProps {
