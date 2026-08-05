@@ -38,7 +38,7 @@ export function RuntimeView() {
   return (
     <div className="flex h-full flex-col bg-muted/30">
       <RuntimeViewHeader />
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         <Checkout config={config} quoteId={quoteId} />
       </ScrollArea>
     </div>

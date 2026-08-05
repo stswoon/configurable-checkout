@@ -15,7 +15,10 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const {data: quote} = useQuote(quoteId);
 
     return (
-        <div data-test-id="CheckoutSteps">
+        <div
+            data-test-id="CheckoutSteps"
+            className="mx-auto flex max-w-lg flex-col gap-3 p-6"
+        >
             {widgetDefinitions.map((widgetDefinition) => (
                 <CheckoutStep
                     key={widgetDefinition.stepId}

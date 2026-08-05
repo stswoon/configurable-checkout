@@ -2,6 +2,7 @@ import {useState} from "react";
 import {useCheckoutContext} from "@/modules/checkout/CheckoutContext";
 import {Button} from "@/ui/button";
 import {Card, CardContent} from "@/ui/card";
+import {Checkbox} from "@/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -29,12 +30,11 @@ export function SubmitStep() {
             <Card>
                 <CardContent className="flex flex-col gap-4 pt-6">
                     <div className="flex items-start gap-2">
-                        <input
+                        <Checkbox
                             id="submit-terms"
-                            type="checkbox"
-                            className="mt-0.5 size-4 rounded border border-input"
+                            className="mt-0.5"
                             checked={agreed}
-                            onChange={(event) => setAgreed(event.target.checked)}
+                            onCheckedChange={(checked) => setAgreed(checked === true)}
                         />
                         <Label htmlFor="submit-terms" className="font-normal leading-snug">
                             I agree with terms
