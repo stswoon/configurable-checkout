@@ -1,14 +1,12 @@
 {
-  stepperView: "landing",
-  // landing | stepper
+  stepperView: "landing", // landing | stepper
   widgets: [
     {
       stepId: "userInfo",
       stepTitle: "Know Your Customer",
       widgetType: 'KycWidget',
       widgetParams: {
-        identificationType: "phone"
-        // phone | email
+        identificationType: "phone" // phone | email
       }
     },
     {
