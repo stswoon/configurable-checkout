@@ -1,12 +1,5 @@
 # Configurable Checkout: checkout-форма, которую собирают из JSON
 
-> Репозиторий: [configurable-checkout](https://github.com/stswoon/configurable-checkout).  
-> Живая демо: https://configurable-checkout.stswoon.ru
-
----
-
-## TL;DR
-
 **Configurable Checkout** — учебный, но осмысленный прототип checkout-потока для телекома и e-commerce, где порядок
 шагов, набор виджетов и их параметры задаются **JSON-конфигурацией**, а не жёстко зашиты в React-компоненты. Слева —
 редактор конфига, справа — живой runtime. Бэкенд — Express с файловым хранилищем JSON, фронт — React 19 + Rspack +
@@ -15,6 +8,9 @@ shadcn/ui.
 Идея простая: один раз написать набор **шагов-виджетов** (`KycWidget`, `OrderDetailsWidget`, …), зарегистрировать их в
 реестре, а продуктовая команда или интегратор собирает checkout как конструктор — меняет порядок, включает/выключает
 шаги, настраивает параметры (`identificationType: "phone"`, список согласий и т.д.) без деплоя фронтенда.
+
+> Репозиторий: [configurable-checkout](https://github.com/stswoon/configurable-checkout).  
+> Живая демо: https://configurable-checkout.stswoon.ru
 
 ## Зачем это нужно
 
@@ -81,9 +77,11 @@ npm run dev:frontend # только UI, /api/* проксируется на bac
 `stepId` и `widgetType` разделены намеренно: один тип виджета может встретиться дважды с разными `stepId` (например, два
 блока согласий с разными `widgetParams.consents`).
 
----
-
 ## Архитектура runtime
+
+Целевая схема: `CheckoutContext` загружает конфиг и quote, владеет state и навигацией; виджеты — шаги wizard, submit уходит на бэкенд.
+
+![Целевая архитектура checkout](img.png)
 
 ```mermaid
 flowchart TB
