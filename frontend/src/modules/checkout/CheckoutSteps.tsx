@@ -88,7 +88,7 @@ export function CheckoutSteps({config, quoteId}: CheckoutStepsProps) {
     const {data: quote, isLoading, error} = useQuote(quoteId);
 
     if (isLoading) {
-        return <CheckoutMessage>Loading quote…</CheckoutMessage>;
+        return <CheckoutMessage>Loading quote...</CheckoutMessage>;
     }
 
     if (error || !quote) {

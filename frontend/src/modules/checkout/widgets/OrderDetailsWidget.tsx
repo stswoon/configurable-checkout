@@ -4,7 +4,7 @@ import {formatCurrency, quoteOrderTotal} from "@/lib/api";
 import {useDebouncedOrderSave} from "@/modules/checkout/hooks/useDebouncedOrderSave";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {OrderDetailsStepValue} from "@/modules/checkout/stepParamHandlers";
-import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/widgets/CheckoutWidgetCard";
+import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/components/CheckoutWidgetCard";
 import {Button} from "@/ui/button";
 import {FieldDescription, FieldGroup, FieldSeparator} from "@/ui/field";
 import type {CheckoutWidgetProps} from "./types";

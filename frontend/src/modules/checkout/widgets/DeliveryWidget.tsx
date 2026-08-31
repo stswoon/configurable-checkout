@@ -4,7 +4,7 @@ import {Truck} from "lucide-react";
 import {deliveryDateRules, trimRequired} from "@/modules/checkout/hooks/formRules";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {DeliveryStepValue} from "@/modules/checkout/stepParamHandlers";
-import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/widgets/CheckoutWidgetCard";
+import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/components/CheckoutWidgetCard";
 import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/field";
 import {Input} from "@/ui/input";
 import type {CheckoutWidgetProps} from "./types";

@@ -4,9 +4,6 @@ https://blog.stswoon.ru/pages/2026/ConfigurableCheckout/index.html
 
 ![img.png](docs/img.png)
 
-* [ ] useSWR
-* [ ] simplify
 * [ ] paper
-* [ ] remove json5 ?
 * [ ] deploy
 * [ ] update arch

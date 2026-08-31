@@ -1,7 +1,7 @@
 import {Controller, useForm} from "react-hook-form";
 import {ClipboardCheck} from "lucide-react";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
-import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/widgets/CheckoutWidgetCard";
+import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/components/CheckoutWidgetCard";
 import {Checkbox} from "@/ui/checkbox";
 import {Field, FieldContent, FieldError, FieldGroup, FieldLabel, FieldSet} from "@/ui/field";
 import type {CheckoutWidgetProps} from "./types";

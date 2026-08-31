@@ -4,7 +4,7 @@ import {CheckCircle2, ShieldCheck} from "lucide-react";
 import {lookupUser} from "@/lib/api";
 import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
 import type {KycStepValue} from "@/modules/checkout/stepParamHandlers";
-import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/widgets/CheckoutWidgetCard";
+import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/components/CheckoutWidgetCard";
 import {Badge} from "@/ui/badge";
 import {Button} from "@/ui/button";
 import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/field";
