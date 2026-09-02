@@ -14,6 +14,14 @@ export async function readJsonFile<T>(filePath: string, fallback: T): Promise<T>
   }
 }
 
+export async function readTextFile(filePath: string, fallback: string | null): Promise<string | null> {
+  try {
+    return await fs.readFile(filePath, "utf-8");
+  } catch {
+    return fallback;
+  }
+}
+
 export async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
   await ensureDir(path.dirname(filePath));
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");

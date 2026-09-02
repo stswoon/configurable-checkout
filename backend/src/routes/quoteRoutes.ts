@@ -8,6 +8,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from "../lib/jsonStore";
+import { recalculateOrderPrices } from "../lib/quotePricing";
 
 const DATA_DIR = path.join(__dirname, "../../data/quotes");
 
@@ -35,7 +36,7 @@ router.post("/", async (req, res) => {
   const quote: QuoteType = {
     id: body.id ?? uuidv4(),
     status: body.status ?? "OPEN",
-    order: body.order ?? [],
+    order: recalculateOrderPrices(body.order ?? []),
     userInfo: body.userInfo ?? { documentType: "passport", documentId: "" },
     delivery: body.delivery ?? { address: "", date: "" },
   };
@@ -53,11 +54,36 @@ router.put("/:id", async (req, res) => {
     return;
   }
   const body = req.body as Partial<QuoteType>;
+  // Price / field updates must not change status — only submit does.
   const quote: QuoteType = {
     ...existing,
     ...body,
     id: req.params.id,
-    order: body.order ?? existing.order,
+    status: existing.status,
+    order: recalculateOrderPrices(body.order ?? existing.order),
+    userInfo: body.userInfo ?? existing.userInfo,
+    delivery: body.delivery ?? existing.delivery,
+  };
+  await writeJsonFile(jsonFilePath(DATA_DIR, quote.id), quote);
+  res.json(quote);
+});
+
+router.post("/:id/submit", async (req, res) => {
+  const existing = await readJsonFile<QuoteType | null>(
+    jsonFilePath(DATA_DIR, req.params.id),
+    null,
+  );
+  if (!existing) {
+    res.status(404).json({ error: "Quote not found" });
+    return;
+  }
+  const body = req.body as Partial<QuoteType>;
+  const quote: QuoteType = {
+    ...existing,
+    ...body,
+    id: req.params.id,
+    status: "IN_PROGRESS",
+    order: recalculateOrderPrices(body.order ?? existing.order),
     userInfo: body.userInfo ?? existing.userInfo,
     delivery: body.delivery ?? existing.delivery,
   };

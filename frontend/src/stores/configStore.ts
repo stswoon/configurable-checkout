@@ -1,36 +1,43 @@
 import { create } from "zustand";
+import JSON5 from "json5";
+import { parseCheckoutConfig, type CheckoutConfig } from "@/modules/checkout/types";
 
-const CONFIG_STORAGE_KEY = "configurable-checkout-config";
+const CONFIG_SOURCE_STORAGE_KEY = "configurable-checkout-config-source";
+const LEGACY_CONFIG_STORAGE_KEY = "configurable-checkout-config";
 const QUOTE_ID_STORAGE_KEY = "configurable-checkout-quote-id";
 
-export type ConfigJson = Record<string, unknown>;
-
 interface ConfigStore {
-  config: ConfigJson | null;
+  config: CheckoutConfig | null;
+  configSource: string | null;
   quoteId: string | null;
-  applyConfig: (config: ConfigJson, quoteId: string | null) => void;
+  applyConfig: (config: CheckoutConfig, configSource: string, quoteId: string | null) => void;
 }
 
-function loadConfigFromStorage(): ConfigJson | null {
+function parseConfigSource(source: string): CheckoutConfig | null {
   try {
-    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return null;
-    }
-    return parsed as ConfigJson;
+    return parseCheckoutConfig(JSON5.parse(source));
   } catch {
     return null;
   }
+}
+
+function loadConfigSourceFromStorage(): string | null {
+  const source = localStorage.getItem(CONFIG_SOURCE_STORAGE_KEY);
+  if (source) return source;
+
+  const legacy = localStorage.getItem(LEGACY_CONFIG_STORAGE_KEY);
+  if (!legacy) return null;
+
+  return parseConfigSource(legacy) ? legacy : null;
 }
 
 function loadQuoteIdFromStorage(): string | null {
   return localStorage.getItem(QUOTE_ID_STORAGE_KEY);
 }
 
-function saveToStorage(config: ConfigJson, quoteId: string | null): void {
-  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+function saveToStorage(configSource: string, quoteId: string | null): void {
+  localStorage.setItem(CONFIG_SOURCE_STORAGE_KEY, configSource);
+  localStorage.removeItem(LEGACY_CONFIG_STORAGE_KEY);
   if (quoteId) {
     localStorage.setItem(QUOTE_ID_STORAGE_KEY, quoteId);
   } else {
@@ -38,12 +45,15 @@ function saveToStorage(config: ConfigJson, quoteId: string | null): void {
   }
 }
 
+const initialConfigSource = loadConfigSourceFromStorage();
+
 export const useConfigStore = create<ConfigStore>((set) => ({
-  config: loadConfigFromStorage(),
+  config: initialConfigSource ? parseConfigSource(initialConfigSource) : null,
+  configSource: initialConfigSource,
   quoteId: loadQuoteIdFromStorage(),
 
-  applyConfig: (config, quoteId) => {
-    saveToStorage(config, quoteId);
-    set({ config, quoteId });
+  applyConfig: (config, configSource, quoteId) => {
+    saveToStorage(configSource, quoteId);
+    set({ config, configSource, quoteId });
   },
 }));

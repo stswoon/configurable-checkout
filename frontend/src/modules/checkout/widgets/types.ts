@@ -1,15 +1,7 @@
-import type { IdpUser, Quote, WidgetDefinition } from "@/lib/api";
-
-export interface WidgetProps {
-  widget: WidgetDefinition;
-  quote?: Quote;
-  user?: IdpUser;
-}
-
-export function resolveWidgetType(widget: WidgetDefinition): string {
-  return widget.widgetType ?? ""
-}
-
-export function getWidgetParams(widget: WidgetDefinition): Record<string, unknown> {
-  return widget.widgetParams ?? {};
+export interface CheckoutWidgetProps<T, P> {
+    stepId: string;
+    value: T;
+    onSubmit: (value: T) => void;
+    params?: P;
+    quoteId: string;
 }

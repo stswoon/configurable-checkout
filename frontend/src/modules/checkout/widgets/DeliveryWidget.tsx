@@ -1,50 +1,83 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
-import { Input } from "@/ui/input";
-import { Label } from "@/ui/label";
-import { Truck } from "lucide-react";
-import type { WidgetProps } from "./types";
+import {useEffect} from "react";
+import {Controller, useForm} from "react-hook-form";
+import {Truck} from "lucide-react";
+import {deliveryDateRules, trimRequired} from "@/modules/checkout/hooks/formRules";
+import {useCheckoutWidgetForm} from "@/modules/checkout/hooks/useCheckoutWidgetForm";
+import type {DeliveryStepValue} from "@/modules/checkout/stepParamHandlers";
+import {CheckoutWidgetCard, WidgetForm} from "@/modules/checkout/components/CheckoutWidgetCard";
+import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel} from "@/ui/field";
+import {Input} from "@/ui/input";
+import type {CheckoutWidgetProps} from "./types";
 
-export function DeliveryWidget({ widget, quote }: WidgetProps) {
-  if (!quote) {
+const EMPTY_DELIVERY: DeliveryStepValue = {address: "", date: ""};
+
+export function DeliveryWidget({
+    stepId,
+    value,
+    onSubmit,
+}: CheckoutWidgetProps<DeliveryStepValue | undefined, unknown>) {
+    const form = useForm<DeliveryStepValue>({
+        defaultValues: value ?? EMPTY_DELIVERY,
+    });
+
+    useEffect(() => {
+        if (value) {
+            form.reset(value);
+        }
+    }, [form, value]);
+
+    const {errorClassName} = useCheckoutWidgetForm(stepId, form, (data) => {
+        onSubmit({
+            address: data.address.trim(),
+            date: data.date.trim(),
+        });
+    });
+
     return (
-      <Card>
-        <CardContent className="py-6 text-sm text-muted-foreground">
-          Loading delivery details…
-        </CardContent>
-      </Card>
+        <CheckoutWidgetCard icon={Truck} title="Delivery" errorClassName={errorClassName}>
+            <WidgetForm>
+                <FieldGroup>
+                    <Controller
+                        name="address"
+                        control={form.control}
+                        rules={trimRequired("Address")}
+                        render={({field, fieldState}) => (
+                            <Field data-invalid={fieldState.invalid || undefined}>
+                                <FieldLabel htmlFor="delivery-address">Address</FieldLabel>
+                                <Input
+                                    {...field}
+                                    id="delivery-address"
+                                    placeholder="Street, city"
+                                    aria-invalid={fieldState.invalid}
+                                />
+                                {fieldState.invalid ? (
+                                    <FieldError errors={[fieldState.error]} />
+                                ) : null}
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="date"
+                        control={form.control}
+                        rules={deliveryDateRules()}
+                        render={({field, fieldState}) => (
+                            <Field data-invalid={fieldState.invalid || undefined}>
+                                <FieldLabel htmlFor="delivery-date">Delivery date</FieldLabel>
+                                <Input
+                                    {...field}
+                                    id="delivery-date"
+                                    placeholder="dd.mm.yyyy"
+                                    aria-invalid={fieldState.invalid}
+                                />
+                                <FieldDescription>Format: dd.mm.yyyy</FieldDescription>
+                                {fieldState.invalid ? (
+                                    <FieldError errors={[fieldState.error]} />
+                                ) : null}
+                            </Field>
+                        )}
+                    />
+                </FieldGroup>
+            </WidgetForm>
+        </CheckoutWidgetCard>
     );
-  }
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Truck />
-          <CardTitle className="text-base">
-            {widget.stepName ?? "Delivery"}
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3 pt-0">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="delivery-address">Address</Label>
-          <Input
-            id="delivery-address"
-            type="text"
-            defaultValue={quote.delivery.address}
-            readOnly
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="delivery-date">Delivery date</Label>
-          <Input
-            id="delivery-date"
-            type="text"
-            defaultValue={quote.delivery.date}
-            readOnly
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
 }

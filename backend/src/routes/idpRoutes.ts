@@ -7,8 +7,13 @@ const DATA_DIR = path.join(__dirname, "../../data/idp");
 export interface IdpUser {
   id: string;
   email: string;
+  phone: string;
   name: string;
   roles: string[];
+}
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/\s+/g, "").trim();
 }
 
 export interface IdpSession {
@@ -27,6 +32,32 @@ router.get("/users", async (_req, res) => {
 router.get("/users/:id", async (req, res) => {
   const users = await readJsonFile<IdpUser[]>(jsonFilePath(DATA_DIR, "users"), []);
   const user = users.find((u) => u.id === req.params.id);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json(user);
+});
+
+/** Lookup a user by email or phone for KYC validation. */
+router.post("/lookup", async (req, res) => {
+  const { email, phone } = req.body as { email?: string; phone?: string };
+  if (!email && !phone) {
+    res.status(400).json({ error: "email or phone is required" });
+    return;
+  }
+
+  const users = await readJsonFile<IdpUser[]>(jsonFilePath(DATA_DIR, "users"), []);
+  const user = users.find((u) => {
+    if (email && u.email.toLowerCase() === email.trim().toLowerCase()) {
+      return true;
+    }
+    if (phone && normalizePhone(u.phone) === normalizePhone(phone)) {
+      return true;
+    }
+    return false;
+  });
+
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;

@@ -1,6 +1,6 @@
 import {ScrollArea} from "@/ui/scroll-area";
 import { useConfigStore } from "@/stores/configStore";
-import {CheckoutRenderer} from "@/modules/checkout/CheckoutRenderer";
+import {Checkout} from "@/modules/checkout/Checkout";
 import {LayoutTemplate} from "lucide-react";
 
 export function RuntimeViewHeader() {
@@ -38,8 +38,8 @@ export function RuntimeView() {
   return (
     <div className="flex h-full flex-col bg-muted/30">
       <RuntimeViewHeader />
-      <ScrollArea className="flex-1">
-        <CheckoutRenderer config={config} quoteId={quoteId} />
+      <ScrollArea className="min-h-0 flex-1">
+        <Checkout config={config} quoteId={quoteId} />
       </ScrollArea>
     </div>
   );

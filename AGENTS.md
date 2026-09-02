@@ -11,7 +11,7 @@ Monorepo demo of a **config-driven checkout UI**. A JSON configuration defines w
 Split-pane layout:
 
 - **Left (`ConfigEditor`)** — edit JSON config, pick a quote ID, apply to preview.
-- **Right (`RuntimeView`)** — renders widgets via `CheckoutRenderer` + `WidgetRenderer`.
+- **Right (`RuntimeView`)** — renders widgets via `Checkout` + `WidgetRenderer`.
 
 Persistence is file-based (JSON on disk). No database.
 
@@ -28,13 +28,13 @@ configurable-checkout/
 ├── frontend/         React 19 + Rspack + Tailwind + shadcn/ui
 │   └── src/
 │       ├── components/   App shell (ConfigEditor, RuntimeView)
-│       ├── modules/checkout/   CheckoutRenderer, WidgetRenderer, widgets/ (canonical)
+│       ├── modules/checkout/   Checkout, WidgetRenderer, widgets/ (canonical)
 │       ├── stores/       Zustand configStore, exampleConfig
 │       ├── hooks/        SWR wrappers (useApi.ts)
 │       ├── lib/          API client, utils
 │       ├── ui/           shadcn components (use @/ui/* imports)
 │       └── ui-extra/     Reusable shadcn layers (use @/ui-extra/* imports)
-└── shared/           Cross-package types (QuoteType.ts)
+└── shared/           Cross-package types (QuoteType.d.ts)
 ```
 
 ## Commands
@@ -46,7 +46,15 @@ npm install
 npm run dev              # backend + frontend workspaces
 npm run dev:backend      # Express on http://localhost:3100
 npm run dev:frontend     # Rspack dev server on http://localhost:3000
-npm run build            # build all workspaces
+npm run build            # compile backend + frontend
+npm start                # Node/Express: API + static UI from frontend/dist (PORT, default 3100)
+```
+
+Docker (port via `PORT`, same pattern as a simple Node image):
+
+```bash
+docker build . -t configurable-checkout
+docker run --rm --name configurable-checkout -p 8081:8081 -e PORT=8081 configurable-checkout
 ```
 
 Backend only:
@@ -98,7 +106,7 @@ ReactRoute (?quoteId)
 |-------------------------------|------------------------------------------------------------------------|
 | `quoteId` (route query param) | Identifies which quote to load                                         |
 | JsonConfig                    | Declares `stepperView`, ordered `widgets[]`, and per-widget params     |
-| QuoteManager (BE)             | `GET /api/quotes/:id` — canonical quote entity (`shared/QuoteType.ts`) |
+| QuoteManager (BE)             | `GET /api/quotes/:id` — canonical quote entity (`shared/QuoteType.d.ts`) |
 
 **CheckoutContext responsibilities**
 
@@ -178,22 +186,22 @@ checkout module; `WidgetDefinition` in `lib/api.ts` supports both shapes for mig
 |--------------------------------------------|-------------|---------------------------------------------|
 | Widget components + registry               | Implemented | `frontend/src/modules/checkout/widgets/`    |
 | `WidgetRenderer` (type → component)        | Implemented | `WidgetRenderer.tsx`                        |
-| Flat runtime preview (all widgets visible) | Implemented | `CheckoutRenderer.tsx` + demo `RuntimeView` |
+| Flat runtime preview (all widgets visible) | Implemented | `Checkout.tsx` + demo `RuntimeView` |
 | `CheckoutContext` (state + navigation)     | Planned     | —                                           |
 | `WizardStepper` + step visibility          | Planned     | —                                           |
 | `SubmitWidget` + quote status transition   | Planned     | —                                           |
 | Route entry with `?quoteId=`               | Planned     | demo uses Zustand `quoteId` instead         |
 
 The **demo app** (`ConfigEditor` / `RuntimeView`) intentionally uses a simplified flat renderer so config edits preview
-instantly. When implementing production checkout, evolve `CheckoutRenderer` toward the diagram — do not fork a second
+instantly. When implementing production checkout, evolve `Checkout` toward the diagram — do not fork a second
 widget system.
 
 **Demo state flow (today)**
 
 1. User edits JSON in `ConfigEditor` and clicks **Apply**.
 2. `useConfigStore.applyConfig()` saves config + quoteId to `localStorage`.
-3. `RuntimeView` passes config + quoteId to `CheckoutRenderer`.
-4. `CheckoutRenderer` fetches quote via `useQuote(quoteId)` and maps every widget through `WidgetRenderer`.
+3. `RuntimeView` passes config + quoteId to `Checkout`.
+4. `Checkout` fetches quote via `useQuote(quoteId)` and maps every widget through `WidgetRenderer`.
 
 Config in the editor is **local-first** (localStorage). Backend config API exists but the editor does not auto-sync to it on Apply.
 
@@ -229,7 +237,7 @@ Follow this path for every new checkout step:
 
 ```
 frontend/src/modules/checkout/
-├── CheckoutRenderer.tsx    # Shell: context + stepper (preview → wizard)
+├── Checkout.tsx    # Shell: context + stepper (preview → wizard)
 ├── WidgetRenderer.tsx      # Maps widgetType → component
 └── widgets/
     ├── index.ts            # WIDGET_REGISTRY
@@ -240,7 +248,7 @@ frontend/src/modules/checkout/
 
 ### Shared types
 
-`shared/QuoteType.ts` is the canonical quote model. Import via:
+`shared/QuoteType.d.ts` is the canonical quote model. Import via:
 
 - Frontend: `import type { QuoteType } from "@shared/QuoteType"` or `Quote` alias from `@/lib/api`
 - Backend: relative path `../../../shared/QuoteType`
@@ -327,16 +335,16 @@ Use `backend/src/lib/jsonStore.ts` for all file I/O (`readJsonFile`, `writeJsonF
 
 ### Change quote schema
 
-1. Update `shared/QuoteType.ts`.
+1. Update `shared/QuoteType.d.ts`.
 2. Update affected widgets, routes, and sample JSON files.
 3. Ensure backend import path and frontend `@shared` alias both resolve.
 
 ## Pitfalls / do-nots
 
 - Do not assume config is persisted to the backend when user clicks Apply — only localStorage is updated.
-- `CheckoutRenderer` currently renders all widgets at once (preview mode); full wizard/context is not wired yet — follow
+- `Checkout` currently renders all widgets at once (preview mode); full wizard/context is not wired yet — follow
   the target architecture in [`docs/img.png`](docs/img.png) when extending the shell.
-- `CheckoutRenderer` passes `quote` to widgets but not `user`; wire `useUser` via context or props when implementing
+- `Checkout` passes `quote` to widgets but not `user`; wire `useUser` via context or props when implementing
   user-dependent steps.
 - Use `exampleConfig.ts` (`stepName` / `widgetType` / `widgetParams`) as the reference for checkout widgets — not legacy
   `backend/data/config/default.json` (`id` / `type` / `props`).

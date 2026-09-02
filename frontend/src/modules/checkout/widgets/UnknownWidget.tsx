@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/ui/card";
-import type { WidgetProps } from "./types";
-import { resolveWidgetType } from "./types";
 
-export function UnknownWidget({ widget }: WidgetProps) {
+interface UnknownWidgetProps {
+    widgetType: string;
+}
+
+export function UnknownWidget({widgetType}: UnknownWidgetProps) {
   return (
     <Card className="border-dashed">
       <CardContent className="py-4 text-sm text-muted-foreground">
-        Unknown widget type: <code>{resolveWidgetType(widget)}</code>
+          Unknown widget type: <code>{widgetType}</code>
       </CardContent>
     </Card>
   );

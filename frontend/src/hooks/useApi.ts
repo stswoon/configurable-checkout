@@ -5,13 +5,13 @@ import {
   fetchQuote,
   fetchQuoteIds,
   fetchUser,
-  type CheckoutConfig,
+  type StoredCheckoutConfig,
   type Quote,
   type IdpUser,
 } from "@/lib/api";
 
 export function useConfig(configId = DEFAULT_CONFIG_ID) {
-  return useSWR<CheckoutConfig>(["config", configId], () => fetchConfig(configId));
+  return useSWR<StoredCheckoutConfig>(["config", configId], () => fetchConfig(configId));
 }
 
 export function useQuoteIds() {

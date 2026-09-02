@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, FileJson } from "lucide-react";
+import JSON5 from "json5";
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { AsyncSelect } from "@/ui-extra/async-select";
@@ -7,29 +8,28 @@ import { Textarea } from "@/ui/textarea";
 import { Card, CardContent } from "@/ui/card";
 import {
   useConfigStore,
-  type ConfigJson,
 } from "@/stores/configStore";
-import { EXAMPLE_CONFIG } from "@/stores/exampleConfig";
+import { parseCheckoutConfig } from "@/modules/checkout/types";
+import { fetchExampleConfig } from "@/lib/api";
 import { useQuoteIds } from "@/hooks/useApi";
 
-function toEditorJson(config: ConfigJson | null): string {
-  return JSON.stringify(config ?? {}, null, 2);
-}
-
 export function ConfigEditor() {
-  const config = useConfigStore((state) => state.config);
+  const configSource = useConfigStore((state) => state.configSource);
   const storedQuoteId = useConfigStore((state) => state.quoteId);
   const applyConfig = useConfigStore((state) => state.applyConfig);
 
   const { data: quoteIds, isLoading: quoteIdsLoading } = useQuoteIds();
 
-  const [jsonText, setJsonText] = useState(() => toEditorJson(config));
+  const [jsonText, setJsonText] = useState(() => configSource ?? "");
   const [quoteId, setQuoteId] = useState<string>(() => storedQuoteId ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [exampleLoading, setExampleLoading] = useState(false);
 
   useEffect(() => {
-    setJsonText(toEditorJson(config));
-  }, [config]);
+    if (configSource !== null) {
+      setJsonText(configSource);
+    }
+  }, [configSource]);
 
   useEffect(() => {
     setQuoteId(storedQuoteId ?? "");
@@ -44,24 +44,32 @@ export function ConfigEditor() {
   const handleApply = useCallback(() => {
     setError(null);
     try {
-      const parsed = JSON.parse(jsonText) as unknown;
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("Configuration must be a JSON object");
+      const parsed = parseCheckoutConfig(JSON5.parse(jsonText));
+      if (!parsed) {
+        throw new Error("Configuration must be a JSON object with a widgets array");
       }
-      applyConfig(parsed as ConfigJson, quoteId || null);
+      applyConfig(parsed, jsonText, quoteId || null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Invalid JSON");
+      setError(e instanceof Error ? e.message : "Invalid JSON5");
     }
   }, [applyConfig, jsonText, quoteId]);
 
-  const handleExample = useCallback(() => {
+  const handleExample = useCallback(async () => {
     setError(null);
-    setJsonText(JSON.stringify(EXAMPLE_CONFIG, null, 2));
+    setExampleLoading(true);
+    try {
+      const example = await fetchExampleConfig();
+      setJsonText(example);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load example config");
+    } finally {
+      setExampleLoading(false);
+    }
   }, []);
 
   return (
     <Card className="flex h-full flex-col border-0 shadow-none">
-      <CardContent className="flex flex-1 flex-col gap-4">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="quote-id">Quote ID</Label>
           <AsyncSelect
@@ -76,13 +84,13 @@ export function ConfigEditor() {
           />
         </div>
 
-        <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="config-json">JSON</Label>
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <Label htmlFor="config-json">JSON5</Label>
           <Textarea
             id="config-json"
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
-            className="min-h-0 flex-1 resize-none font-mono text-xs leading-relaxed"
+            className="field-sizing-fixed min-h-0 flex-1 resize-none overflow-y-auto font-mono text-xs leading-relaxed"
             spellCheck={false}
           />
         </div>
@@ -94,9 +102,9 @@ export function ConfigEditor() {
             <Check data-icon="inline-start" />
             Apply
           </Button>
-          <Button variant="outline" onClick={handleExample}>
+          <Button variant="outline" onClick={handleExample} disabled={exampleLoading}>
             <FileJson data-icon="inline-start" />
-            Example
+            {exampleLoading ? "Loading…" : "Example"}
           </Button>
         </div>
       </CardContent>
