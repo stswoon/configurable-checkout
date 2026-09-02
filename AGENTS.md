@@ -34,7 +34,7 @@ configurable-checkout/
 │       ├── lib/          API client, utils
 │       ├── ui/           shadcn components (use @/ui/* imports)
 │       └── ui-extra/     Reusable shadcn layers (use @/ui-extra/* imports)
-└── shared/           Cross-package types (QuoteType.ts)
+└── shared/           Cross-package types (QuoteType.d.ts)
 ```
 
 ## Commands
@@ -46,7 +46,15 @@ npm install
 npm run dev              # backend + frontend workspaces
 npm run dev:backend      # Express on http://localhost:3100
 npm run dev:frontend     # Rspack dev server on http://localhost:3000
-npm run build            # build all workspaces
+npm run build            # compile backend + frontend
+npm start                # Node/Express: API + static UI from frontend/dist (PORT, default 3100)
+```
+
+Docker (port via `PORT`, same pattern as a simple Node image):
+
+```bash
+docker build . -t configurable-checkout
+docker run --rm --name configurable-checkout -p 8081:8081 -e PORT=8081 configurable-checkout
 ```
 
 Backend only:
@@ -98,7 +106,7 @@ ReactRoute (?quoteId)
 |-------------------------------|------------------------------------------------------------------------|
 | `quoteId` (route query param) | Identifies which quote to load                                         |
 | JsonConfig                    | Declares `stepperView`, ordered `widgets[]`, and per-widget params     |
-| QuoteManager (BE)             | `GET /api/quotes/:id` — canonical quote entity (`shared/QuoteType.ts`) |
+| QuoteManager (BE)             | `GET /api/quotes/:id` — canonical quote entity (`shared/QuoteType.d.ts`) |
 
 **CheckoutContext responsibilities**
 
@@ -240,7 +248,7 @@ frontend/src/modules/checkout/
 
 ### Shared types
 
-`shared/QuoteType.ts` is the canonical quote model. Import via:
+`shared/QuoteType.d.ts` is the canonical quote model. Import via:
 
 - Frontend: `import type { QuoteType } from "@shared/QuoteType"` or `Quote` alias from `@/lib/api`
 - Backend: relative path `../../../shared/QuoteType`
@@ -327,7 +335,7 @@ Use `backend/src/lib/jsonStore.ts` for all file I/O (`readJsonFile`, `writeJsonF
 
 ### Change quote schema
 
-1. Update `shared/QuoteType.ts`.
+1. Update `shared/QuoteType.d.ts`.
 2. Update affected widgets, routes, and sample JSON files.
 3. Ensure backend import path and frontend `@shared` alias both resolve.
 
